@@ -9,7 +9,8 @@ public record CreateCourseRequest(
         String type,
         Float distanceKm,
         PathData pathData,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean roundTrip
 
 ) {
 }
