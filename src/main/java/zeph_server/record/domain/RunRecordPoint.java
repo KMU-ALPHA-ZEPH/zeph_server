@@ -16,8 +16,9 @@ public class RunRecordPoint {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "run_record_id", nullable = false)
-    private Long runRecordId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="run_record_id", nullable = false)
+    private RunRecord runRecord;
 
     @Column(nullable = false)
     private Integer seq;

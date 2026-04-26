@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface RunRecordPointRepository extends JpaRepository<RunRecordPoint, Long> {
 
-    List<RunRecordPoint> findByRunRecordIdOrderBySeq(Long runRecordId);
+    List<RunRecordPoint> findByRunRecord_IdOrderBySeq(Long recordId);
 }

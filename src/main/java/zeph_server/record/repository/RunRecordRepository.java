@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RunRecordRepository extends JpaRepository<RunRecord, Long> {
-    List<Record> findByUserIdOrderByStartTimeDesc(Long userId);
+    List<RunRecord> findByUserIdOrderByStartTimeDesc(Long userId);
 
     @Query("SELECT SUM(r.distanceKm) FROM RunRecord r WHERE r.userId = :userId")
     Double getTotalDistance(@Param("userId") Long userId);

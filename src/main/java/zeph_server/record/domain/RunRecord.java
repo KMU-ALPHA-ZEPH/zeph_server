@@ -7,9 +7,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import zeph_server.course.domain.Course;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "run_record")
+@Table(name = "run_records")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -39,6 +41,14 @@ public class RunRecord {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @OneToMany(
+            mappedBy = "runRecord",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<RunRecordPoint> points =
+            new ArrayList<>();
 
     @Transient
     public Double getAvgPace() {
