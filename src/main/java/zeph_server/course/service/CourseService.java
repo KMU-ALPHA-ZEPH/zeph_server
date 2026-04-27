@@ -65,7 +65,7 @@ public class CourseService {
 
         Float startLat = first.lat();
         Float startLng = first.lng();
-
+        // pathData 객체를 JSON 문자열으로 바꿈
         String pathDataJson;
         try {
             pathDataJson = objectMapper.writeValueAsString(pathData);
@@ -103,4 +103,3 @@ public class CourseService {
     }
 
 }
-
