@@ -1,0 +1,63 @@
+package zeph_server.global.oauth2;
+
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+import zeph_server.global.security.CustomUserDetails;
+import zeph_server.user.domain.User;
+import zeph_server.user.repository.UserRepository;
+
+import java.util.Collections;
+import java.util.Map;
+
+@Service
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
+    private final UserRepository userRepository;
+
+    public CustomOAuth2UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest request) {
+        OAuth2User oAuth2User = super.loadUser(request);
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+
+        // 1. 카카오 id
+        Long kakaoId = ((Number) attributes.get("id")).longValue();
+
+        // 2. kakao_account
+        Map<String, Object> kakaoAccount =
+                (Map<String, Object>) attributes.get("kakao_account");
+
+        // 3. profile
+        if (kakaoAccount == null) {
+            throw new OAuth2AuthenticationException("Kakao account response is missing");
+        }
+
+        Map<String, Object> profile =
+                (Map<String, Object>) kakaoAccount.get("profile");
+
+        //String nickname = (String) profile.getOrDefault("nickname", "");
+        //String profileImageUrl = (String) profile.getOrDefault("profile_image_url", "");
+        //String email = (String) kakaoAccount.getOrDefault("email", "");
+        //String email = (String) kakaoAccount.get("email");
+        String nickname = profile == null ? "" : (String) profile.getOrDefault("nickname", "");
+        String profileImageUrl =
+                profile == null ? "" : (String) profile.getOrDefault("profile_image_url", "");
+        String email = (String) kakaoAccount.getOrDefault("email", "");
+
+        // 4. DB 조회 or 생성
+        User user = userRepository.findByKakaoId(kakaoId)
+                .orElseGet(() -> userRepository.save(
+                        new User(kakaoId, nickname, profileImageUrl, email)
+                ));
+
+        System.out.println("cservice");
+
+        return new CustomUserDetails(user, attributes, Collections.emptyList());
+    }
+}
