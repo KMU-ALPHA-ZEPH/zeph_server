@@ -25,7 +25,7 @@ public class Course {
 
     @Column(nullable = false)
     private String type;
-    
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "path_data", columnDefinition = "jsonb")
     private String pathData;
@@ -35,12 +35,6 @@ public class Course {
 
     @Column(name = "round_trip")
     private Boolean roundTrip;
-
-    @Column(name = "start_lat")
-    private Float startLat;
-
-    @Column(name = "start_lng")
-    private Float startLng;
 
     @Column
     private String region;

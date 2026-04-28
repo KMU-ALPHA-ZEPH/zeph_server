@@ -6,19 +6,17 @@ import java.time.LocalDateTime;
 
 public record CourseResponse(
         Long id,
-        Float startLat,
-        Float startLng,
         String type,
         Boolean roundTrip,
+        String region,
         LocalDateTime createdAt
 ) {
     public static CourseResponse create(Course course) {
         return new CourseResponse(
                 course.getId(),
-                course.getStartLat(),
-                course.getStartLng(),
                 course.getType(),
                 course.getRoundTrip(),
+                course.getRegion(),
                 course.getCreatedAt()
         );
     }

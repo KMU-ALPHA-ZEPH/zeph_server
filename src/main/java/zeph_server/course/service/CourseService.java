@@ -6,13 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
-import zeph_server.course.dto.CourseDetailResponse;
-import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.CreateCourseRequest;
-import zeph_server.course.dto.RecommendCourseRequest;
+import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
 import zeph_server.course.repository.CourseRepository;
+import zeph_server.util.ReverseGeoCalculator;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -23,6 +21,7 @@ import java.util.List;
 
 
 public class CourseService {
+    private final ReverseGeoCalculator reverseGeoCalculator;
     private final CourseRepository courseRepository;
     private final ObjectMapper objectMapper;
 
@@ -63,8 +62,11 @@ public class CourseService {
         PathData pathData = requestDTO.pathData();
         Point first = pathData.points().get(0);
 
-        Float startLat = first.lat();
-        Float startLng = first.lng();
+        Double startLat = first.lat();
+        Double startLng = first.lng();
+
+        String region = reverseGeoCalculator.getRegion(startLat, startLng);
+
         // pathData 객체를 JSON 문자열으로 바꿈
         String pathDataJson;
         try {
@@ -78,8 +80,7 @@ public class CourseService {
                 .distanceKm(requestDTO.distanceKm())
                 .roundTrip(requestDTO.roundTrip())
                 .pathData(pathDataJson)
-                .startLat(startLat)
-                .startLng(startLng)
+                .region(region)
                 .createdAt(requestDTO.createdAt())
                 .build();
         courseRepository.save(course);

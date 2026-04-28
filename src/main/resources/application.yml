@@ -7,6 +7,10 @@ spring:
     username: yiseojun
     password:
 
+kakao:
+  api:
+    key: { KAKAO_API_KEY }
+
   jpa:
     hibernate:
       ddl-auto: none
