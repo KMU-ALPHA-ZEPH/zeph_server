@@ -36,6 +36,9 @@ public class Course {
     @Column(name = "round_trip")
     private Boolean roundTrip;
 
+    @Column(name = "like")
+    private Boolean like;
+
     @Column
     private String region;
 

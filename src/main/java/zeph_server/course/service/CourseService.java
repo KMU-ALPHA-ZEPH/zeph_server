@@ -58,7 +58,7 @@ public class CourseService {
 
 
     @Transactional
-    public void createCourse(CreateCourseRequest requestDTO) {
+    public Course createCourse(CreateCourseRequest requestDTO) {
         PathData pathData = requestDTO.pathData();
         Point first = pathData.points().get(0);
 
@@ -83,7 +83,7 @@ public class CourseService {
                 .region(region)
                 .createdAt(requestDTO.createdAt())
                 .build();
-        courseRepository.save(course);
+        return courseRepository.save(course);
     }
 
 
@@ -103,4 +103,8 @@ public class CourseService {
         return CourseDetailResponse.create(course, pathData);
     }
 
+    public Course findById(Long courseId) {
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("course not found."));
+    }
 }

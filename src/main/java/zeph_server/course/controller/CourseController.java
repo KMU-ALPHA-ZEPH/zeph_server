@@ -25,6 +25,7 @@ import java.util.List;
 public class CourseController {
     private final CourseService courseService;
 
+    // 코스 추천받을 때 type도 들어올거임 그니까 type을 3개 만드는 게 아니라 걍 type 받아서 코스 만드는걸로
     @Operation(summary = "AI 기반 코스 추천", description = "AI를 이용해 코스를 생성한다.(WALK, RUNNING, SAFE")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "추천 코스 생성 성공"),
@@ -39,20 +40,7 @@ public class CourseController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "코스 생성(저장)", description = "추천받은 코스 중 하나를 선택해 저장")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "코스 생성(저장) 성공"),
-            @ApiResponse(responseCode = "400", description = "필수 필드 누락"),
-            @ApiResponse(responseCode = "500", description = "JSON 변환 중 오류 발생")
-    })
-    @PostMapping
-    public ResponseEntity<?> createCourse(
-            @RequestBody CreateCourseRequest requestDTO
-    ) {
-        courseService.createCourse(requestDTO);
-        return ResponseEntity.ok().build();
-    }
-
+    // 인기 경로에서 사용 (인기 경로 목록 조회)
     @Operation(summary = "코스 목록 조회", description = "모든 코스 목록 조회 (지역 / 타입)으로 구분")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "목록 조회 성공 - 데이터 없어도 빈 리스트 보냄"),
