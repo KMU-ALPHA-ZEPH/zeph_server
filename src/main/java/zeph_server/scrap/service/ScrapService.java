@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
 import zeph_server.course.service.CourseService;
+import zeph_server.global.exception.ForbiddenException;
+import zeph_server.global.exception.NotFoundException;
 import zeph_server.group.domain.Group;
+import zeph_server.group.repository.GroupRepository;
 import zeph_server.group.service.GroupService;
 import zeph_server.scrap.domain.Scrap;
 import zeph_server.scrap.dto.CreateScrapRequest;
@@ -22,6 +25,7 @@ public class ScrapService {
     private final CourseService courseService;
     private final GroupService groupService;
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
     @Transactional
     public void createScrap(CreateScrapRequest dto, Long userId) {
@@ -61,8 +65,20 @@ public class ScrapService {
         scrapRepository.save(scrap);
     }
 
-    public List<ScrapPreviewResponse> getScrapByGroup(Long userId, Long groupId) {
+    @Transactional(readOnly = true)
+    public List<ScrapPreviewResponse> getScrapsByGroup(Long userId, Long groupId) {
+        // 1. 폴더 존재 확인
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("폴더를 찾을 수 없습니다"));
+
+        // 2. 본인 폴더인지 확인
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("본인의 폴더만 조회할 수 있습니다");
+        }
+
+        // 3. 스크랩 조회
         List<Scrap> scraps = scrapRepository.findAllByUserIdAndGroupId(userId, groupId);
+
         return scraps.stream()
                 .map(ScrapPreviewResponse::from)
                 .toList();
