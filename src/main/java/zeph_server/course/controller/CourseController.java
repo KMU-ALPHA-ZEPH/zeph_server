@@ -12,7 +12,6 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import zeph_server.course.dto.CourseDetailResponse;
 import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.CreateCourseRequest;
 import zeph_server.course.dto.RecommendCourseRequest;
 import zeph_server.course.service.CourseService;
 
@@ -26,7 +25,7 @@ public class CourseController {
     private final CourseService courseService;
 
     // 코스 추천받을 때 type도 들어올거임 그니까 type을 3개 만드는 게 아니라 걍 type 받아서 코스 만드는걸로
-    @Operation(summary = "AI 기반 코스 추천", description = "AI를 이용해 코스를 생성한다.(WALK, RUNNING, SAFE")
+    @Operation(summary = "AI 기반 코스 추천", description = "AI를 이용해 코스를 생성한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "추천 코스 생성 성공"),
             @ApiResponse(responseCode = "400", description = "추천에 필요한 필수 파라미터 누락 / 지원하지 않는 추천 타입"),

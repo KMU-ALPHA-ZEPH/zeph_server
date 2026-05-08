@@ -36,11 +36,18 @@ public class Course {
     @Column(name = "round_trip")
     private Boolean roundTrip;
 
-    @Column(name = "like")
-    private Boolean like;
-
     @Column
     private String region;
+
+    @Column(name = "prefer_lighting")
+    private Boolean preferLighting;
+
+    @Column(name = "prefer_convenience")
+    private Boolean preferConvenience;
+
+    // 일단 500자 안쪽, 500자 이상 필요 시 (columnDefinition = "TEXT") 필요
+    @Column(name = "slpoe_preference")
+    private String slopePreference;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
