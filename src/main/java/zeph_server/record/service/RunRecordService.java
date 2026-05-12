@@ -33,10 +33,9 @@ public class RunRecordService {
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
-            Long courseId,
             RunRecordRequestDTO dto
     ) {
-        Course course = findCourse(courseId);
+        Course course = findCourse(dto.getCourseId());
 
         RunRecord savedRecord = createRunRecord(dto, course);
 
