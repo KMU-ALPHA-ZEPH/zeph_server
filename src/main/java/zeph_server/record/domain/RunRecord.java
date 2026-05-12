@@ -39,6 +39,10 @@ public class RunRecord {
     @Column(nullable = false)
     private Integer durationSec;
 
+    @Builder.Default
+    @Column(nullable = false, length = 500)
+    private String memo = "";
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

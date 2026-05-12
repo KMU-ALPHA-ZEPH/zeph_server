@@ -19,6 +19,7 @@ public class RunRecordDetailResponseDTO {
     private Double distanceKm;
     private Integer durationSec;
     private Double avgPace;
+    private String memo;
 
     private List<PointDto> path;
 

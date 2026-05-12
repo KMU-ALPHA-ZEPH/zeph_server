@@ -94,6 +94,7 @@ public class RunRecordService {
                 .distanceKm(record.getDistanceKm())
                 .durationSec(record.getDurationSec())
                 .avgPace(record.getAvgPace())
+                .memo(record.getMemo())
                 .path(path)
                 .build();
     }
