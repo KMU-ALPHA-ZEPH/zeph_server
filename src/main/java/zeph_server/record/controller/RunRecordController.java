@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zeph_server.record.dto.request.RunRecordRequestDTO;
+import zeph_server.record.dto.request.UpdateMemoRequestDTO;
 import zeph_server.record.dto.response.RunRecordCreateResponseDTO;
 import zeph_server.record.dto.response.RunRecordDetailResponseDTO;
 import zeph_server.record.dto.response.RunRecordListResponseDTO;
@@ -46,6 +47,15 @@ public class RunRecordController {
                 runRecordService.getRecordDetail(recordId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{recordId}")
+    public ResponseEntity<Void> updateMemo(
+            @PathVariable Long recordId,
+            @RequestBody UpdateMemoRequestDTO requestDTO
+    ) {
+        runRecordService.updateMemo(recordId, requestDTO.getMemo());
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{recordId}")

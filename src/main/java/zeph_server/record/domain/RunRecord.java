@@ -60,4 +60,8 @@ public class RunRecord {
                 ? durationSec / distanceKm
                 : null;
     }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
+    }
 }

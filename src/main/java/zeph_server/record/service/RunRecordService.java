@@ -100,6 +100,12 @@ public class RunRecordService {
     }
 
     @Transactional
+    public void updateMemo(Long recordId, String memo) {
+        RunRecord record = findRunRecord(recordId);
+        record.updateMemo(memo);
+    }
+
+    @Transactional
     public void deleteRecord(Long recordId){
 
         RunRecord record =
