@@ -77,6 +77,7 @@ public class CourseService {
 
         Course course = Course.builder()
                 .type(requestDTO.type())
+                .name(requestDTO.name())
                 .distanceKm(requestDTO.distanceKm())
                 .roundTrip(requestDTO.roundTrip())
                 .pathData(pathDataJson)

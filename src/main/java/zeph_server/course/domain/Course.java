@@ -24,6 +24,9 @@ public class Course {
     private Long id;
 
     @Column(nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
     private String type;
 
     @JdbcTypeCode(SqlTypes.JSON)
