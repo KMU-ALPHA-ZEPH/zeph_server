@@ -10,6 +10,7 @@ public record ScrapPreviewResponse(
         Long scrapId,
         Long courseId,
         String type,
+        String name,
         Float distanceKm,
         String region,
         Long groupId,
