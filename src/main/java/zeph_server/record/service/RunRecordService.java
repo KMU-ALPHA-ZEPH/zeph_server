@@ -1,9 +1,13 @@
 package zeph_server.record.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
+import zeph_server.course.dto.common.PathData;
+import zeph_server.course.dto.common.Point;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.global.exception.CustomException;
 import zeph_server.global.exception.GlobalErrorCode;
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +35,7 @@ public class RunRecordService {
     private final RunRecordRepository runRecordRepository;
     private final RunRecordPointRepository pointRepository;
     private final CourseRepository courseRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
@@ -51,51 +57,52 @@ public class RunRecordService {
         List<RunRecord> records =
                 runRecordRepository.findByUserIdOrderByStartTimeDesc(userId);
 
+        if(records.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> recordIds = records.stream()
+                .map(RunRecord::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<RunRecordPoint>> pointsByRecord =
+                pointRepository.findAllByRunRecordIdIn(recordIds).stream()
+                        .collect(Collectors.groupingBy(p -> p.getRunRecord().getId()));
+
         return records.stream()
-                .map(record ->
-                        RunRecordListResponseDTO.builder()
-                                .runId(record.getId())
-                                .date(record.getStartTime())
-                                .distanceKm(record.getDistanceKm())
-                                .durationSec(record.getDurationSec())
-                                .avgPace(record.getAvgPace())
-                                .build()
-                )
+                .map(record -> toListResponse(
+                        record,
+                        pointsByRecord.getOrDefault(record.getId(), List.of())
+                ))
                 .collect(Collectors.toList());
     }
 
-    public RunRecordDetailResponseDTO getRecordDetail(
-            Long recordId
-    ){
+    public RunRecordDetailResponseDTO getRecordDetail(Long recordId) {
+        RunRecord record = findRunRecord(recordId);
+        Course course = record.getCourse();
 
-        RunRecord record =
-                findRunRecord(recordId);
+        List<RunRecordDetailResponseDTO.PointDto> coursePath =
+                parseCoursePathFull(course.getPathData());
 
         List<RunRecordPoint> points =
-                pointRepository
-                        .findByRunRecord_IdOrderBySeq(recordId);
+                pointRepository.findByRunRecord_IdOrderBySeq(recordId);
 
-
-        List<RunRecordDetailResponseDTO.PointDto> path =
+        List<RunRecordDetailResponseDTO.PointDto> actualPath =
                 points.stream()
-                        .map(p ->
-                                new RunRecordDetailResponseDTO.PointDto(
-                                        p.getLat(),
-                                        p.getLng()
-                                )
-                        )
+                        .map(p -> new RunRecordDetailResponseDTO.PointDto(p.getLat(), p.getLng()))
                         .collect(Collectors.toList());
-
 
         return RunRecordDetailResponseDTO.builder()
                 .runId(record.getId())
+                .courseName(course.getType())
                 .startTime(record.getStartTime())
                 .endTime(record.getEndTime())
                 .distanceKm(record.getDistanceKm())
                 .durationSec(record.getDurationSec())
                 .avgPace(record.getAvgPace())
                 .memo(record.getMemo())
-                .path(path)
+                .coursePath(coursePath)
+                .actualPath(actualPath)
                 .build();
     }
 
@@ -203,5 +210,75 @@ public class RunRecordService {
         }
 
         pointRepository.saveAll(pointList);
+    }
+
+    private RunRecordListResponseDTO toListResponse(RunRecord record, List<RunRecordPoint> rawActual) {
+        Course course = record.getCourse();
+
+        List<RunRecordListResponseDTO.PointDto> coursePath =
+                parseCoursePath(course.getPathData());
+
+
+        List<RunRecordListResponseDTO.PointDto> actualPath =
+                downsample(rawActual, 50).stream()
+                        .map(p -> new RunRecordListResponseDTO.PointDto(p.getLat(), p.getLng()))
+                        .collect(Collectors.toList());
+
+        return RunRecordListResponseDTO.builder()
+                .runId(record.getId())
+                .date(record.getStartTime())
+                .courseName(course.getType())
+                .distanceKm(record.getDistanceKm())
+                .durationSec(record.getDurationSec())
+                .avgPace(record.getAvgPace())
+                .coursePath(coursePath)
+                .actualPath(actualPath)
+                .build();
+    }
+
+    private List<RunRecordListResponseDTO.PointDto> parseCoursePath(String pathDataJson) {
+        if (pathDataJson == null || pathDataJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            PathData pathData = objectMapper.readValue(pathDataJson, PathData.class);
+            return downsample(pathData.points(), 50).stream()
+                    .map(p -> new RunRecordListResponseDTO.PointDto(p.lat(), p.lng()))
+                    .collect(Collectors.toList());
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("코스 pathData 파싱 실패", e);
+        }
+    }
+
+    private List<RunRecordDetailResponseDTO.PointDto> parseCoursePathFull(String pathDataJson) {
+        if(pathDataJson == null || pathDataJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            PathData pathData = objectMapper.readValue(pathDataJson, PathData.class);
+            return pathData.points().stream()
+                    .map(p -> new RunRecordDetailResponseDTO.PointDto(p.lat(), p.lng()))
+                    .collect(Collectors.toList());
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("코스 pathData 파싱 실패", e);
+        }
+    }
+
+    private <T> List<T> downsample(List<T> points, int targetSize) {
+        if (points == null || points.size() <= targetSize) {
+            return points;
+        }
+
+        int step = points.size() / targetSize;
+        List<T> result = new ArrayList<>();
+        for (int i = 0; i < points.size(); i += step) {
+            result.add(points.get(i));
+        }
+
+        T lastSource = points.get(points.size() - 1);
+        if (result.get(result.size() - 1) != lastSource) {
+            result.add(lastSource);
+        }
+        return result;
     }
 }

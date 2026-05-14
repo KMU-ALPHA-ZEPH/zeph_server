@@ -12,6 +12,7 @@ import java.util.List;
 public class RunRecordDetailResponseDTO {
 
     private Long runId;
+    private String courseName;
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -21,7 +22,8 @@ public class RunRecordDetailResponseDTO {
     private Double avgPace;
     private String memo;
 
-    private List<PointDto> path;
+    private List<PointDto> coursePath;
+    private List<PointDto> actualPath;
 
     @Getter
     @AllArgsConstructor

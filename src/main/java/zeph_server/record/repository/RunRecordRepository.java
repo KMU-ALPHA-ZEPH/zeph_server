@@ -1,5 +1,6 @@
 package zeph_server.record.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RunRecordRepository extends JpaRepository<RunRecord, Long> {
+
+    @EntityGraph(attributePaths = "course")
     List<RunRecord> findByUserIdOrderByStartTimeDesc(Long userId);
 
     @Query("SELECT SUM(r.distanceKm) FROM RunRecord r WHERE r.userId = :userId")
