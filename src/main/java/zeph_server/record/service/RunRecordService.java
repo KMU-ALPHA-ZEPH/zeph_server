@@ -19,6 +19,7 @@ import zeph_server.record.dto.response.RunRecordCreateResponseDTO;
 import zeph_server.record.dto.response.RunRecordDetailResponseDTO;
 import zeph_server.record.dto.response.RunRecordListResponseDTO;
 import zeph_server.record.dto.response.RunStatsResponseDTO;
+import zeph_server.record.dto.response.RunStatsResponseDTO.BreakdownDto;
 import zeph_server.record.repository.RunRecordPointRepository;
 import zeph_server.record.repository.RunRecordRepository;
 
@@ -158,20 +159,29 @@ public class RunRecordService {
 
         String typeFilter = (type == null || "ALL".equalsIgnoreCase(type)) ? null : type;
 
-        Object[] result = runRecordRepository.aggregateStats(userId, typeFilter, start, end);
-        Long runCount = (Long) result[0];
-        Long totalMovingSec = ((Number) result[1]).longValue();
-        Double totalDistanceKm = ((Number) result[2]).doubleValue();
+        List<RunRecord> records = runRecordRepository.findStatsRecords(userId, typeFilter, start, end);
+
+        int runCount = records.size();
+        long totalMovingSec = records.stream()
+                .mapToLong(r -> r.getDurationSec() - r.getPausedSec())
+                .sum();
+        double totalDistanceKm = records.stream()
+                .mapToDouble(RunRecord::getDistanceKm)
+                .sum();
 
         Double avgPace = null;
         if (runCount > 0 && totalDistanceKm > 0) {
-            avgPace = totalMovingSec.doubleValue() / totalDistanceKm;
+            avgPace = totalMovingSec / totalDistanceKm;
         }
 
+        List<BreakdownDto> breakdown = computeBreakdown(records, period, date);
+
         return RunStatsResponseDTO.builder()
-                .runCount(runCount.intValue())
+                .runCount(runCount)
                 .avgPace(avgPace)
-                .totalDurationSec(totalMovingSec.intValue())
+                .totalDurationSec((int) totalMovingSec)
+                .totalDistanceKm(totalDistanceKm)
+                .breakdown(breakdown)
                 .build();
     }
 
@@ -302,5 +312,79 @@ public class RunRecordService {
             result.add(lastSource);
         }
         return result;
+    }
+
+    private List<BreakdownDto> computeBreakdown(
+            List<RunRecord> records,
+            Period period,
+            LocalDate date
+    ) {
+        return switch (period) {
+            case WEEK  -> computeWeekBreakdown(records);
+            case MONTH -> computeMonthBreakdown(records, date);
+            case YEAR  -> computeYearBreakdown(records);
+            case ALL   -> computeAllBreakdown(records);
+        };
+    }
+
+    private List<BreakdownDto> computeWeekBreakdown(List<RunRecord> records) {
+        Map<Integer, Double> byDay = records.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getStartTime().getDayOfWeek().getValue(),
+                        Collectors.summingDouble(RunRecord::getDistanceKm)
+                ));
+
+        String[] labels = {"월", "화", "수", "목", "금", "토", "일"};
+        List<BreakdownDto> result = new ArrayList<>();
+        for (int i = 1; i <= 7; i++) {
+            result.add(new BreakdownDto(i, labels[i - 1], byDay.getOrDefault(i, 0.0)));
+        }
+        return result;
+    }
+
+    private List<BreakdownDto> computeMonthBreakdown(List<RunRecord> records, LocalDate date) {
+        int daysInMonth = date.lengthOfMonth();
+        Map<Integer, Double> byDay = records.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getStartTime().getDayOfMonth(),
+                        Collectors.summingDouble(RunRecord::getDistanceKm)
+                ));
+
+        List<BreakdownDto> result = new ArrayList<>();
+        for (int i = 1; i <= daysInMonth; i++) {
+            result.add(new BreakdownDto(i, String.valueOf(i), byDay.getOrDefault(i, 0.0)));
+        }
+        return result;
+    }
+
+    private List<BreakdownDto> computeYearBreakdown(List<RunRecord> records) {
+        Map<Integer, Double> byMonth = records.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getStartTime().getMonthValue(),
+                        Collectors.summingDouble(RunRecord::getDistanceKm)
+                ));
+
+        List<BreakdownDto> result = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            result.add(new BreakdownDto(i, i + "월", byMonth.getOrDefault(i, 0.0)));
+        }
+        return result;
+    }
+
+    private List<BreakdownDto> computeAllBreakdown(List<RunRecord> records) {
+        if (records.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Integer, Double> byYear = records.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getStartTime().getYear(),
+                        Collectors.summingDouble(RunRecord::getDistanceKm)
+                ));
+
+        return byYear.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new BreakdownDto(e.getKey(), String.valueOf(e.getKey()), e.getValue()))
+                .collect(Collectors.toList());
     }
 }

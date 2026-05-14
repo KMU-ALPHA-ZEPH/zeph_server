@@ -15,17 +15,13 @@ public interface RunRecordRepository extends JpaRepository<RunRecord, Long> {
     List<RunRecord> findByUserIdOrderByStartTimeDesc(Long userId);
 
     @Query("""
-        SELECT
-            COUNT(r),
-            COALESCE(SUM(r.durationSec - r.pausedSec), 0L),
-            COALESCE(SUM(r.distanceKm), 0.0)
-        FROM RunRecord r
+        SELECT r FROM RunRecord r
         WHERE r.userId = :userId
           AND (:type IS NULL OR r.course.type = :type)
           AND (:start IS NULL OR r.startTime >= :start)
           AND (:end IS NULL OR r.startTime < :end)
     """)
-    Object[] aggregateStats(
+    List<RunRecord> findStatsRecords(
             @Param("userId") Long userId,
             @Param("type") String type,
             @Param("start") LocalDateTime start,
