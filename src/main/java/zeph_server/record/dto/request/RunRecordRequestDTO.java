@@ -16,6 +16,7 @@ public class RunRecordRequestDTO {
 
     private Double distanceKm;
     private Integer durationSec;
+    private Integer pausedSec;
 
     private List<PointDTO> points;
 

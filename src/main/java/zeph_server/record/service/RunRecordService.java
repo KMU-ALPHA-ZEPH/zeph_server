@@ -13,6 +13,7 @@ import zeph_server.global.exception.CustomException;
 import zeph_server.global.exception.GlobalErrorCode;
 import zeph_server.record.domain.RunRecord;
 import zeph_server.record.domain.RunRecordPoint;
+import zeph_server.record.domain.Period;
 import zeph_server.record.dto.request.RunRecordRequestDTO;
 import zeph_server.record.dto.response.RunRecordCreateResponseDTO;
 import zeph_server.record.dto.response.RunRecordDetailResponseDTO;
@@ -26,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Map;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -122,35 +125,53 @@ public class RunRecordService {
     }
 
     public RunStatsResponseDTO getStats(
-            Long userId
-    ){
+            Long userId,
+            String type,
+            Period period,
+            LocalDate date
+    ) {
+        LocalDateTime start = null;
+        LocalDateTime end = null;
 
-        Double totalDistance =
-                runRecordRepository
-                        .getTotalDistance(userId);
+        if (period != Period.ALL) {
+            if (date == null) {
+                throw new CustomException(GlobalErrorCode.INVALID_REQUEST);
+            }
+            switch (period) {
+                case WEEK -> {
+                    LocalDate monday = date.with(DayOfWeek.MONDAY);
+                    start = monday.atStartOfDay();
+                    end = monday.plusWeeks(1).atStartOfDay();
+                }
+                case MONTH -> {
+                    LocalDate first = date.withDayOfMonth(1);
+                    start = first.atStartOfDay();
+                    end = first.plusMonths(1).atStartOfDay();
+                }
+                case YEAR -> {
+                    LocalDate first = date.withDayOfYear(1);
+                    start = first.atStartOfDay();
+                    end = first.plusYears(1).atStartOfDay();
+                }
+            }
+        }
 
-        Double monthlyDistance =
-                runRecordRepository
-                        .getMonthlyDistance(
-                                userId,
-                                LocalDateTime.now()
-                                        .withDayOfMonth(1)
-                                        .withHour(0)
-                                        .withMinute(0)
-                                        .withSecond(0)
-                        );
+        String typeFilter = (type == null || "ALL".equalsIgnoreCase(type)) ? null : type;
+
+        Object[] result = runRecordRepository.aggregateStats(userId, typeFilter, start, end);
+        Long runCount = (Long) result[0];
+        Long totalMovingSec = ((Number) result[1]).longValue();
+        Double totalDistanceKm = ((Number) result[2]).doubleValue();
+
+        Double avgPace = null;
+        if (runCount > 0 && totalDistanceKm > 0) {
+            avgPace = totalMovingSec.doubleValue() / totalDistanceKm;
+        }
 
         return RunStatsResponseDTO.builder()
-                .totalDistance(
-                        totalDistance == null
-                                ? 0.0
-                                : totalDistance
-                )
-                .monthlyDistance(
-                        monthlyDistance == null
-                                ? 0.0
-                                : monthlyDistance
-                )
+                .runCount(runCount.intValue())
+                .avgPace(avgPace)
+                .totalDurationSec(totalMovingSec.intValue())
                 .build();
     }
 
@@ -181,6 +202,7 @@ public class RunRecordService {
                         .endTime(dto.getEndTime())
                         .distanceKm(dto.getDistanceKm())
                         .durationSec(dto.getDurationSec())
+                        .pausedSec(dto.getPausedSec() == null ? 0 : dto.getPausedSec())
                         .build();
 
         return runRecordRepository.save(runRecod);

@@ -39,6 +39,10 @@ public class RunRecord {
     @Column(nullable = false)
     private Integer durationSec;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer pausedSec = 0;
+
     @Builder.Default
     @Column(nullable = false, length = 500)
     private String memo = "";
@@ -56,9 +60,11 @@ public class RunRecord {
 
     @Transient
     public Double getAvgPace() {
-        return durationSec != null && distanceKm != null && distanceKm > 0
-                ? durationSec / distanceKm
-                : null;
+       if (durationSec == null || distanceKm == null || distanceKm <= 0) {
+           return null;
+       }
+       int movingSec = durationSec - (pausedSec == null ? 0 : pausedSec);
+       return (double) movingSec / distanceKm;
     }
 
     public void updateMemo(String memo) {

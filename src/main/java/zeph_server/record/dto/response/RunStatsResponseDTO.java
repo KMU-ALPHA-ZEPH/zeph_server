@@ -7,6 +7,7 @@ import lombok.Getter;
 @Builder
 public class RunStatsResponseDTO {
 
-    private Double totalDistance;
-    private Double monthlyDistance;
+   private Integer runCount;
+   private Double avgPace;
+   private Integer totalDurationSec;
 }

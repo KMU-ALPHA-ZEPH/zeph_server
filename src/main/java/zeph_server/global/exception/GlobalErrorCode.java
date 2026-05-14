@@ -18,6 +18,11 @@ public enum GlobalErrorCode implements ErrorCode {
             "러닝 기록을 찾을 수 없습니다"
     ),
 
+    INVALID_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다"
+    ),
+
     DEFAULT(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "서버 오류가 발생했습니다"
