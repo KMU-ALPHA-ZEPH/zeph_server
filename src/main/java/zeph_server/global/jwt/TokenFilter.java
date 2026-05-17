@@ -1,7 +1,9 @@
 package zeph_server.global.jwt;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,18 +22,6 @@ public class TokenFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return uri.equals("/")
-                || uri.equals("/login")
-                || uri.startsWith("/oauth2/")
-                || uri.startsWith("/login/")
-                || uri.startsWith("/swagger")
-                || uri.startsWith("/api-docs")
-                || uri.startsWith("/v3/api-docs");
-    }
-
-    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
@@ -46,7 +36,9 @@ public class TokenFilter extends OncePerRequestFilter {
 
                 CustomUserDetails userDetails =
                         new CustomUserDetails(
-                                new User(userId, null, null, null),
+                                User.builder()
+                                        .id(userId)
+                                        .build(),
                                 null,
                                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
                         );

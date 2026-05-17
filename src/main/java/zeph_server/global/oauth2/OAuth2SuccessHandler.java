@@ -36,6 +36,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 user.getUser().getKakaoId(),
                 user.getUser().getName(),
                 user.getUser().getEmail(),
+                user.getUser().getProfileImageUrl(),
                 token
         );
 

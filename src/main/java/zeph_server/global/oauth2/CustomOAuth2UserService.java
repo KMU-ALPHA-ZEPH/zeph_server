@@ -41,23 +41,44 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> profile =
                 (Map<String, Object>) kakaoAccount.get("profile");
 
-        //String nickname = (String) profile.getOrDefault("nickname", "");
-        //String profileImageUrl = (String) profile.getOrDefault("profile_image_url", "");
-        //String email = (String) kakaoAccount.getOrDefault("email", "");
-        //String email = (String) kakaoAccount.get("email");
         String nickname = profile == null ? "" : (String) profile.getOrDefault("nickname", "");
         String profileImageUrl =
                 profile == null ? "" : (String) profile.getOrDefault("profile_image_url", "");
         String email = (String) kakaoAccount.getOrDefault("email", "");
 
-        // 4. DB 조회 or 생성
+        // 4. kakaoId로 조회, 없으면 이메일 중복 확인 후 새 카카오 계정 생성
         User user = userRepository.findByKakaoId(kakaoId)
-                .orElseGet(() -> userRepository.save(
-                        new User(kakaoId, nickname, profileImageUrl, email)
-                ));
+                .orElseGet(() -> createKakaoUser(kakaoId, nickname, profileImageUrl, email));
 
         System.out.println("cservice");
 
         return new CustomUserDetails(user, attributes, Collections.emptyList());
+    }
+
+    private User createKakaoUser(
+            Long kakaoId,
+            String nickname,
+            String profileImageUrl,
+            String email
+    ) {
+        if (email != null && !email.isBlank()) {
+            if (userRepository.existsByEmail(email)) {
+                throw new OAuth2AuthenticationException("Already registered email");
+            }
+
+            return userRepository.save(User.builder()
+                    .kakaoId(kakaoId)
+                    .name(nickname)
+                    .profileImageUrl(profileImageUrl)
+                    .email(email)
+                    .build());
+        }
+
+        return userRepository.save(User.builder()
+                .kakaoId(kakaoId)
+                .name(nickname)
+                .profileImageUrl(profileImageUrl)
+                .email("")
+                .build());
     }
 }
