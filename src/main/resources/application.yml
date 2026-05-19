@@ -1,16 +1,40 @@
 spring:
   profiles:
-    active: local
+    active: default
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
     url: jdbc:postgresql://localhost:5432/zeph
-    username: yiseojun
-    password:
+    username: jjunh33
+    password: 1234
 
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: 9d06b1510ebadbaf0cb4e6349589b03e
+            client-name: Kakao
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            client-authentication-method: client_secret_post # 카카오 권장 인증 방식
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
 
 springdoc:
   swagger-ui:
@@ -28,3 +52,7 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
   paths-to-match: /**
+
+logging:
+  level:
+    org.springframework.security: DEBUG

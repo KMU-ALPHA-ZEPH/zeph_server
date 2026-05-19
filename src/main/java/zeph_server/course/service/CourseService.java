@@ -17,7 +17,7 @@ import zeph_server.course.repository.CourseRepository;
 
 
 public class CourseService {
-    private final CourseRepository courseRepository
+    private final CourseRepository courseRepository;
     private final ObjectMapper objectMapper;
 
     public void recommendCourse(RecommendCourseRequest requestDTO) {
