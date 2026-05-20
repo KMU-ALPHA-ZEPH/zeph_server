@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
 import zeph_server.course.dto.common.PathData;
-import zeph_server.course.dto.common.Point;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.global.exception.CustomException;
 import zeph_server.global.exception.GlobalErrorCode;
