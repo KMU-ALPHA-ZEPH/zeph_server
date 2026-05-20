@@ -22,6 +22,7 @@ import java.util.List;
 
 public class CourseService {
     private final ReverseGeoCalculator reverseGeoCalculator;
+
     private final CourseRepository courseRepository;
     private final ObjectMapper objectMapper;
 
