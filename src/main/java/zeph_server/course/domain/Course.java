@@ -25,7 +25,7 @@ public class Course {
 
     @Column(nullable = false)
     private String name;
-    
+
     @Column(nullable = false)
     private String type;
 
@@ -49,7 +49,7 @@ public class Course {
     private Boolean preferConvenience;
 
     // 일단 500자 안쪽, 500자 이상 필요 시 (columnDefinition = "TEXT") 필요
-    @Column(name = "slpoe_preference")
+    @Column(name = "slope_preference")
     private String slopePreference;
 
     @Column(name = "created_at", nullable = false)
