@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import zeph_server.global.security.CustomUserDetails;
 import zeph_server.scrap.dto.CreateScrapRequest;
 import zeph_server.scrap.dto.ScrapPreviewResponse;
 import zeph_server.scrap.service.ScrapService;
@@ -28,9 +30,11 @@ public class ScrapController {
     })
     @PostMapping
     public ResponseEntity<?> createScrap(
-            @RequestBody CreateScrapRequest requestDTO
+            @RequestBody CreateScrapRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        scrapService.createScrap(requestDTO); // 파라미터로 userId 받아오기
+        Long userId = userDetails.getUser().getId();
+        scrapService.createScrap(requestDTO, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -45,8 +49,9 @@ public class ScrapController {
     @GetMapping("/{groupId}")
     public ResponseEntity<List<ScrapPreviewResponse>> getScrapsByGroupId(
             @PathVariable Long groupId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        Long userId = userDetails.getUser().getId();
         return ResponseEntity.ok(scrapService.getScrapsByGroup(userId, groupId));
     }
 

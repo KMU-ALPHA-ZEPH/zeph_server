@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import zeph_server.course.domain.Course;
 import zeph_server.group.domain.Group;
+import zeph_server.user.domain.User;
 
 import java.time.LocalDateTime;
 

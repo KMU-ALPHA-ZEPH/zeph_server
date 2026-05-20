@@ -14,6 +14,8 @@ import zeph_server.scrap.domain.Scrap;
 import zeph_server.scrap.dto.CreateScrapRequest;
 import zeph_server.scrap.dto.ScrapPreviewResponse;
 import zeph_server.scrap.repository.ScrapRepository;
+import zeph_server.user.domain.User;
+import zeph_server.user.repository.UserRepository;
 
 import java.util.List;
 

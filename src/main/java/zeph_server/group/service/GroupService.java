@@ -2,8 +2,8 @@ package zeph_server.group.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zeph_server.global.exception.DuplicateException;
 import zeph_server.global.exception.ForbiddenException;
 import zeph_server.global.exception.NotFoundException;
@@ -13,6 +13,8 @@ import zeph_server.group.dto.GroupResponse;
 import zeph_server.group.dto.UpdateGroupRequest;
 import zeph_server.group.repository.GroupRepository;
 import zeph_server.scrap.repository.ScrapRepository;
+import zeph_server.user.domain.User;
+import zeph_server.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -21,15 +23,29 @@ import java.util.List;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final ScrapRepository scrapRepository;
+    private final UserRepository userRepository;
 
-    public void addGroup(@Valid AddGroupRequest requestDTO, Long userId) {
-        // user 관련 로직 추가 필요 (유저 아이디, 이름으로 중복되는 이름 금지 로직)
+    @Transactional
+    public void addGroup(AddGroupRequest requestDTO, Long userId) {
+        // User 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다"));
+
+        // 중복 체크
+        if (groupRepository.existsByUserIdAndName(userId, requestDTO.name())) {
+            throw new DuplicateException("이미 존재하는 폴더 이름입니다");
+        }
+
+        // Group 생성
         Group group = Group.builder()
                 .name(requestDTO.name())
+                .user(user)         // ← 추가
                 .build();
+
         groupRepository.save(group);
     }
 
+    @Transactional(readOnly = true)
     public List<GroupResponse> getAllGroups(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("유저를 찾을 수 없습니다");
@@ -44,6 +60,7 @@ public class GroupService {
                 .toList();
     }
 
+    @Transactional
     public void updateGroup(Long groupId, UpdateGroupRequest requestDTO, Long userId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new IllegalArgumentException("Folder Not Found"));
         if (!group.getName().equals(requestDTO.name())  // 이름이 바뀌는 경우만 체크
