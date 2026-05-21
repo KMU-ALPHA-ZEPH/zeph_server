@@ -15,7 +15,7 @@ import zeph_server.scrap.service.ScrapService;
 
 import java.util.List;
 
-@Tag(name = "groups", description = "그룹 API")
+@Tag(name = "scraps", description = "스크랩 API")
 @RestController
 @RequestMapping("v0/scraps")
 @RequiredArgsConstructor
