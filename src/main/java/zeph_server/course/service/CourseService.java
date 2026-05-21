@@ -33,7 +33,7 @@ public class CourseService {
         boolean hasType = type != null && !type.isBlank();
 
         if (hasType && hasRegion) {
-            courses = courseRepository.findByRegionAndType(type, region);
+            courses = courseRepository.findByRegionAndType(region, type);
         } else if (hasType) {
             courses = courseRepository.findByType(type);
         } else if (hasRegion) {

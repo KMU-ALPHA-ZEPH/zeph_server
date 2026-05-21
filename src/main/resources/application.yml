@@ -6,12 +6,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/zeph
-    username: jjunh33
-    password: 1234
-
-kakao:
-  api:
-    key: { KAKAO_API_KEY }
+    username: yiseojun
+    password:
 
   jpa:
     hibernate:
@@ -27,7 +23,7 @@ kakao:
             client-name: Kakao
             authorization-grant-type: authorization_code
             redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
-            client-authentication-method: client_secret_post # 카카오 권장 인증 방식
+            client-authentication-method: client_secret_post
             scope:
               - profile_nickname
               - profile_image
@@ -39,6 +35,9 @@ kakao:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+kakao:
+  api:
+    key: ${KAKAO_API_KEY}
 
 springdoc:
   swagger-ui:
