@@ -1,5 +1,6 @@
 package zeph_server.record.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,7 @@ public class RunRecordController {
     @PostMapping
     public ResponseEntity<RunRecordCreateResponseDTO> createRecord(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody RunRecordRequestDTO requestDTO
+            @Valid @RequestBody RunRecordRequestDTO requestDTO
     ) {
         RunRecordCreateResponseDTO response =
                 runRecordService.saveRunRecord(userDetails.getUser().getId(), requestDTO);
@@ -69,7 +70,7 @@ public class RunRecordController {
     public ResponseEntity<Void> updateMemo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long recordId,
-            @RequestBody UpdateMemoRequestDTO requestDTO
+            @Valid @RequestBody UpdateMemoRequestDTO requestDTO
     ) {
         runRecordService.updateMemo(userDetails.getUser().getId(), recordId, requestDTO.getMemo());
         return ResponseEntity.ok().build();
