@@ -22,6 +22,8 @@ public class RunRecordDetailResponseDTO {
     private Double avgPace;
     private String memo;
 
+    Boolean scrapped;
+
     private List<PointDto> coursePath;
     private List<PointDto> actualPath;
 

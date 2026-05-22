@@ -19,6 +19,7 @@ import zeph_server.record.dto.response.RunStatsResponseDTO;
 import zeph_server.record.dto.response.RunStatsResponseDTO.BreakdownDto;
 import zeph_server.record.repository.RunRecordPointRepository;
 import zeph_server.record.repository.RunRecordRepository;
+import zeph_server.scrap.repository.ScrapRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class RunRecordService {
     private final RunRecordRepository runRecordRepository;
     private final RunRecordPointRepository pointRepository;
     private final CourseRepository courseRepository;
+    private final ScrapRepository scrapRepository;
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
@@ -83,6 +85,8 @@ public class RunRecordService {
         verifyOwnership(record, userId);
         Course course = record.getCourse();
 
+        boolean isScrapped = scrapRepository.existsByUserIdAndCourseId(userId, course.getId());
+
         List<RunRecordDetailResponseDTO.PointDto> coursePath =
                 parseCoursePathFull(course.getPathData());
 
@@ -103,6 +107,7 @@ public class RunRecordService {
                 .durationSec(record.getDurationSec())
                 .avgPace(record.getAvgPace())
                 .memo(record.getMemo())
+                .scrapped(isScrapped)
                 .coursePath(coursePath)
                 .actualPath(actualPath)
                 .build();
