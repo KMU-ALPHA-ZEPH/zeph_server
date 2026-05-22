@@ -1,16 +1,17 @@
 package zeph_server.global.exception;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponseDTO>
@@ -35,6 +36,26 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    // 404 - 리소스 없음
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleNotFound(NotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", e.getMessage()));
+    }
+
+    // 409 - 중복
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<?> handleDuplicate(DuplicateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", e.getMessage()));
+    }
+
+    // 403 - 권한 없음
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<?> handleForbidden(ForbiddenException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", e.getMessage()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO>
@@ -62,8 +83,6 @@ public class GlobalExceptionHandler {
                 );
     }
 
-
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO>
     handleException(
@@ -84,5 +103,4 @@ public class GlobalExceptionHandler {
                         )
                 );
     }
-
 }

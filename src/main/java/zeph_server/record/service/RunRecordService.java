@@ -1,7 +1,5 @@
 package zeph_server.record.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +36,6 @@ public class RunRecordService {
     private final RunRecordRepository runRecordRepository;
     private final RunRecordPointRepository pointRepository;
     private final CourseRepository courseRepository;
-    private final ObjectMapper objectMapper;
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
@@ -277,32 +274,22 @@ public class RunRecordService {
                 .build();
     }
 
-    private List<RunRecordListResponseDTO.PointDto> parseCoursePath(String pathDataJson) {
-        if (pathDataJson == null || pathDataJson.isBlank()) {
+    private List<RunRecordListResponseDTO.PointDto> parseCoursePath(PathData pathData) {
+        if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
             return List.of();
         }
-        try {
-            PathData pathData = objectMapper.readValue(pathDataJson, PathData.class);
-            return downsample(pathData.points(), 50).stream()
-                    .map(p -> new RunRecordListResponseDTO.PointDto(p.lat(), p.lng()))
-                    .collect(Collectors.toList());
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("코스 pathData 파싱 실패", e);
-        }
+        return downsample(pathData.points(), 50).stream()
+                .map(p -> new RunRecordListResponseDTO.PointDto(p.lat(), p.lng()))
+                .collect(Collectors.toList());
     }
 
-    private List<RunRecordDetailResponseDTO.PointDto> parseCoursePathFull(String pathDataJson) {
-        if(pathDataJson == null || pathDataJson.isBlank()) {
+    private List<RunRecordDetailResponseDTO.PointDto> parseCoursePathFull(PathData pathData) {
+        if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
             return List.of();
         }
-        try {
-            PathData pathData = objectMapper.readValue(pathDataJson, PathData.class);
-            return pathData.points().stream()
-                    .map(p -> new RunRecordDetailResponseDTO.PointDto(p.lat(), p.lng()))
-                    .collect(Collectors.toList());
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("코스 pathData 파싱 실패", e);
-        }
+        return pathData.points().stream()
+                .map(p -> new RunRecordDetailResponseDTO.PointDto(p.lat(), p.lng()))
+                .collect(Collectors.toList());
     }
 
     private <T> List<T> downsample(List<T> points, int targetSize) {
