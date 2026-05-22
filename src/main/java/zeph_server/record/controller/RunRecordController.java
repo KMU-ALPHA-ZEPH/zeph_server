@@ -32,7 +32,7 @@ import zeph_server.record.service.RunRecordService;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "record-controller", description = "러닝 기록 API")
+@Tag(name = "records", description = "러닝 기록 API")
 @RestController
 @RequestMapping("v0/records")
 @RequiredArgsConstructor
