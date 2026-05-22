@@ -3,7 +3,6 @@ package zeph_server.course.dto;
 import zeph_server.course.domain.Course;
 import zeph_server.course.dto.common.PathData;
 
-import java.time.LocalDateTime;
 
 public record CourseDetailResponse(
         Long id,
@@ -12,12 +11,12 @@ public record CourseDetailResponse(
         PathData pathData
 
 ) {
-    public static CourseDetailResponse create(Course course, PathData pathData) {
+    public static CourseDetailResponse create(Course course) {
         return new CourseDetailResponse(
                 course.getId(),
                 course.getType(),
                 course.getDistanceKm(),
-                pathData
+                course.getPathData()
 
         );
     }

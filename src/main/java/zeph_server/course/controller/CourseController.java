@@ -8,12 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import zeph_server.course.dto.CourseDetailResponse;
 import zeph_server.course.dto.CourseResponse;
 import zeph_server.course.dto.RecommendCourseRequest;
 import zeph_server.course.service.CourseService;
+import zeph_server.global.security.CustomUserDetails;
 
 import java.util.List;
 
@@ -33,7 +35,8 @@ public class CourseController {
     })
     @PostMapping("/recommend")
     public ResponseEntity<?> RecommendCourse(
-            @RequestBody RecommendCourseRequest requestDTO
+            @RequestBody RecommendCourseRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         courseService.recommendCourse(requestDTO);
         return ResponseEntity.ok().build();

@@ -63,13 +63,14 @@ public class GroupService {
     @Transactional
     public void updateGroup(Long groupId, UpdateGroupRequest requestDTO, Long userId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new IllegalArgumentException("Folder Not Found"));
+        if (!group.getUser().getId().equals(userId)) { // 여기도 user 관련 로직 필요
+            throw new ForbiddenException("권한 없음");
+        }
         if (!group.getName().equals(requestDTO.name())  // 이름이 바뀌는 경우만 체크
                 && groupRepository.existsByUserIdAndName(userId, requestDTO.name())) {
             throw new DuplicateException("이미 존재하는 폴더 이름입니다");
         }
-        if (!group.getUser().getId().equals(userId)) { // 여기도 user 관련 로직 필요
-            throw new ForbiddenException("권한 없음");
-        }
+
         group.update(requestDTO.name(), requestDTO.description());
 
     }

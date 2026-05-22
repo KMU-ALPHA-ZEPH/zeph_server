@@ -68,22 +68,17 @@ public class CourseService {
 
         String region = reverseGeoCalculator.getRegion(startLat, startLng);
 
-        // pathData 객체를 JSON 문자열으로 바꿈
-        String pathDataJson;
-        try {
-            pathDataJson = objectMapper.writeValueAsString(pathData);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
 
         Course course = Course.builder()
                 .type(requestDTO.type())
                 .name(requestDTO.name())
                 .distanceKm(requestDTO.distanceKm())
                 .roundTrip(requestDTO.roundTrip())
-                .pathData(pathDataJson)
+                .pathData(requestDTO.pathData())
                 .region(region)
-                .createdAt(requestDTO.createdAt())
+                .preferLighting(requestDTO.preferLighting())          // 추가
+                .preferConvenience(requestDTO.preferConvenience())    // 추가
+                .slopePreference(requestDTO.slopePreference())
                 .build();
         return courseRepository.save(course);
     }
@@ -94,15 +89,7 @@ public class CourseService {
     }
 
     public CourseDetailResponse getCourseDetails(Course course) {
-        PathData pathData;
-
-        try {
-            pathData = objectMapper.readValue(course.getPathData(), PathData.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        return CourseDetailResponse.create(course, pathData);
+        return CourseDetailResponse.create(course);
     }
 
     public Course findById(Long courseId) {

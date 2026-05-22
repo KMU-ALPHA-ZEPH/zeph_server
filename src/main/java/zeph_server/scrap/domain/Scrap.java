@@ -2,6 +2,7 @@ package zeph_server.scrap.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import zeph_server.course.domain.Course;
 import zeph_server.group.domain.Group;
@@ -42,6 +43,7 @@ public class Scrap {
     @JoinColumn(name = "group_id")
     private Group group;
 
-    @Column(name = "saved_at", nullable = false)
+    @CreatedDate
+    @Column(name = "saved_at", nullable = false, updatable = false)
     private LocalDateTime savedAt;
 }

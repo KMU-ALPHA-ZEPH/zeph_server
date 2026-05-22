@@ -4,10 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import zeph_server.course.dto.common.PathData;
 
-import java.sql.SQLType;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,7 +31,7 @@ public class Course {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "path_data", columnDefinition = "jsonb")
-    private String pathData;
+    private PathData pathData;
 
     @Column(name = "distance_km", nullable = false)
     private Float distanceKm;
@@ -52,7 +52,8 @@ public class Course {
     @Column(name = "slope_preference")
     private String slopePreference;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
 }
