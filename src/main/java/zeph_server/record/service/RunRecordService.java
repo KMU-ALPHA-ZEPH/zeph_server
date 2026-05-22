@@ -100,7 +100,7 @@ public class RunRecordService {
 
         return RunRecordDetailResponseDTO.builder()
                 .runId(record.getId())
-                .courseName(course.getType())
+                .courseName(course.getName())
                 .startTime(record.getStartTime())
                 .endTime(record.getEndTime())
                 .distanceKm(record.getDistanceKm())
@@ -270,7 +270,7 @@ public class RunRecordService {
         return RunRecordListResponseDTO.builder()
                 .runId(record.getId())
                 .date(record.getStartTime())
-                .courseName(course.getType())
+                .courseName(course.getName())
                 .distanceKm(record.getDistanceKm())
                 .durationSec(record.getDurationSec())
                 .avgPace(record.getAvgPace())
