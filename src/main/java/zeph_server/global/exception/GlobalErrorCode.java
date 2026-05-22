@@ -23,6 +23,11 @@ public enum GlobalErrorCode implements ErrorCode {
             "잘못된 요청입니다"
     ),
 
+    ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "접근 권한이 없습니다"
+    ),
+
     DEFAULT(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "서버 오류가 발생했습니다"

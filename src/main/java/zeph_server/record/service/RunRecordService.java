@@ -42,11 +42,12 @@ public class RunRecordService {
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
+            Long userId,
             RunRecordRequestDTO dto
     ) {
         Course course = findCourse(dto.getCourseId());
 
-        RunRecord savedRecord = createRunRecord(dto, course);
+        RunRecord savedRecord = createRunRecord(userId, dto, course);
 
         savePoints(
                 savedRecord,
@@ -80,8 +81,9 @@ public class RunRecordService {
                 .collect(Collectors.toList());
     }
 
-    public RunRecordDetailResponseDTO getRecordDetail(Long recordId) {
+    public RunRecordDetailResponseDTO getRecordDetail(Long userId, Long recordId) {
         RunRecord record = findRunRecord(recordId);
+        verifyOwnership(record, userId);
         Course course = record.getCourse();
 
         List<RunRecordDetailResponseDTO.PointDto> coursePath =
@@ -110,16 +112,18 @@ public class RunRecordService {
     }
 
     @Transactional
-    public void updateMemo(Long recordId, String memo) {
+    public void updateMemo(Long userId, Long recordId, String memo) {
         RunRecord record = findRunRecord(recordId);
+        verifyOwnership(record, userId);
         record.updateMemo(memo);
     }
 
     @Transactional
-    public void deleteRecord(Long recordId){
+    public void deleteRecord(Long userId, Long recordId){
 
         RunRecord record =
                 findRunRecord(recordId);
+        verifyOwnership(record, userId);
 
         runRecordRepository.delete(record);
     }
@@ -202,10 +206,10 @@ public class RunRecordService {
                 );
     }
 
-    private RunRecord createRunRecord(RunRecordRequestDTO dto, Course course) {
+    private RunRecord createRunRecord(Long userId, RunRecordRequestDTO dto, Course course) {
         RunRecord runRecod =
                 RunRecord.builder()
-                        .userId(dto.getUserId())
+                        .userId(userId)
                         .course(course)
                         .startTime(dto.getStartTime())
                         .endTime(dto.getEndTime())
@@ -215,6 +219,12 @@ public class RunRecordService {
                         .build();
 
         return runRecordRepository.save(runRecod);
+    }
+
+    private void verifyOwnership(RunRecord record, Long userId) {
+        if (!record.getUserId().equals(userId)) {
+            throw new CustomException(GlobalErrorCode.ACCESS_DENIED);
+        }
     }
 
     private void savePoints(

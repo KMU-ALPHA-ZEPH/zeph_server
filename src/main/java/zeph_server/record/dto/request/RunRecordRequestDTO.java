@@ -8,7 +8,6 @@ import java.util.List;
 @Getter
 public class RunRecordRequestDTO {
 
-    private Long userId;
     private Long courseId;
 
     private LocalDateTime startTime;
