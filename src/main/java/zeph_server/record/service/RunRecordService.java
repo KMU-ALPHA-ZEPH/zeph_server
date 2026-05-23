@@ -19,6 +19,7 @@ import zeph_server.record.dto.response.RunStatsResponseDTO;
 import zeph_server.record.dto.response.RunStatsResponseDTO.BreakdownDto;
 import zeph_server.record.repository.RunRecordPointRepository;
 import zeph_server.record.repository.RunRecordRepository;
+import zeph_server.courseLike.repository.CourseLikeRepository;
 import zeph_server.scrap.repository.ScrapRepository;
 
 import java.time.LocalDateTime;
@@ -38,6 +39,7 @@ public class RunRecordService {
     private final RunRecordPointRepository pointRepository;
     private final CourseRepository courseRepository;
     private final ScrapRepository scrapRepository;
+    private final CourseLikeRepository courseLikeRepository;
 
     @Transactional
     public RunRecordCreateResponseDTO saveRunRecord(
@@ -86,6 +88,7 @@ public class RunRecordService {
         Course course = record.getCourse();
 
         boolean isScrapped = scrapRepository.existsByUserIdAndCourseId(userId, course.getId());
+        boolean isLiked = courseLikeRepository.existsByUserIdAndCourseId(userId, course.getId());
 
         List<RunRecordDetailResponseDTO.PointDto> coursePath =
                 parseCoursePathFull(course.getPathData());
@@ -108,6 +111,7 @@ public class RunRecordService {
                 .avgPace(record.getAvgPace())
                 .memo(record.getMemo())
                 .scrapped(isScrapped)
+                .liked(isLiked)
                 .coursePath(coursePath)
                 .actualPath(actualPath)
                 .build();

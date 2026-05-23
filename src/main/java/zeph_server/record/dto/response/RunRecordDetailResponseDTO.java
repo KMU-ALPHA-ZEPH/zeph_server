@@ -23,6 +23,7 @@ public class RunRecordDetailResponseDTO {
     private String memo;
 
     Boolean scrapped;
+    Boolean liked;
 
     private List<PointDto> coursePath;
     private List<PointDto> actualPath;
