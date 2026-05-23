@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import zeph_server.course.domain.Course;
 import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.TokenProvider;
 import zeph_server.user.domain.User;
@@ -90,7 +91,13 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteProfile(Long id){
+    public void deleteProfile(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("user not found."));
     }
 }

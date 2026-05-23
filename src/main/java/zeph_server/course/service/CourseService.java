@@ -10,6 +10,7 @@ import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
 import zeph_server.course.repository.CourseRepository;
+import zeph_server.courseLike.service.CourseLikeService;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.nio.file.Path;
@@ -24,9 +25,9 @@ public class CourseService {
     private final ReverseGeoCalculator reverseGeoCalculator;
 
     private final CourseRepository courseRepository;
-    private final ObjectMapper objectMapper;
+    private final CourseLikeService courseLikeService;
 
-    public List<CourseResponse> getAllCourses(String region, String type) {
+    public List<CourseResponse> getAllCourses(String region, String type, Long userId) {
         List<Course> courses;
 
         boolean hasRegion = region != null && !region.isBlank();
@@ -43,15 +44,24 @@ public class CourseService {
         }
 
         return courses.stream()
-                .map(this::getCourseDisplay)
+                .map(course -> CourseResponse.create(
+                                course,
+                                courseLikeService.getLikeCount(course.getId()),
+                                courseLikeService.isLiked(course.getId(), userId)
+                        )
+                )
                 .toList();
     }
 
-    public CourseDetailResponse getCourseById(Long id) {
+    public CourseDetailResponse getCourseById(Long id, Long userId) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 코스를 찾을 수 없습니다."));
 
-        return getCourseDetails(course);
+        return CourseDetailResponse.create(
+                course,
+                courseLikeService.getLikeCount(id),
+                courseLikeService.isLiked(id, userId)
+        );
     }
 
     public void recommendCourse(RecommendCourseRequest requestDTO) {
@@ -83,14 +93,6 @@ public class CourseService {
         return courseRepository.save(course);
     }
 
-
-    public CourseResponse getCourseDisplay(Course course) {
-        return CourseResponse.create(course);
-    }
-
-    public CourseDetailResponse getCourseDetails(Course course) {
-        return CourseDetailResponse.create(course);
-    }
 
     public Course findById(Long courseId) {
         return courseRepository.findById(courseId)

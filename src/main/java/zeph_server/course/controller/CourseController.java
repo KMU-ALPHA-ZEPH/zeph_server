@@ -52,9 +52,11 @@ public class CourseController {
     @GetMapping
     public ResponseEntity<List<CourseResponse>> getAllCourses(
             @RequestParam(required = false) String region,
-            @RequestParam(required = false) String type
+            @RequestParam(required = false) String type,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(courseService.getAllCourses(region, type));
+        Long userId = userDetails.getUser().getId();
+        return ResponseEntity.ok(courseService.getAllCourses(region, type, userId));
     }
 
     @Operation(summary = "세부 코스 조회", description = "코스 정보 표시")
@@ -65,8 +67,12 @@ public class CourseController {
             @ApiResponse(responseCode = "500", description = "데이터 복원(JSON) 중 서버 오류 발생")
     })
     @GetMapping("/{courseId}")
-    public ResponseEntity<CourseDetailResponse> getCourseById(@PathVariable Long courseId) {
-        return ResponseEntity.ok(courseService.getCourseById(courseId));
+    public ResponseEntity<CourseDetailResponse> getCourseById(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        return ResponseEntity.ok(courseService.getCourseById(courseId, userId));
     }
 }
 
