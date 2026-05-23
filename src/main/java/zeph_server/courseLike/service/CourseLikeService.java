@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
+import zeph_server.course.repository.CourseRepository;
 import zeph_server.course.service.CourseService;
 import zeph_server.courseLike.domain.CourseLike;
 import zeph_server.courseLike.repository.CourseLikeRepository;
@@ -18,7 +19,7 @@ import zeph_server.user.service.UserService;
 public class CourseLikeService {
 
     private final CourseLikeRepository courseLikeRepository;
-    private final CourseService courseService;
+    private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final UserService userService;
 
@@ -31,9 +32,9 @@ public class CourseLikeService {
         }
 
         // 2. User, Course 조회
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("코스를 찾을 수 없습니다"));
         User user = userService.findById(userId);
-        Course course = courseService.findById(courseId);
-
         // 3. 좋아요 생성
         CourseLike like = CourseLike.builder()
                 .user(user)
