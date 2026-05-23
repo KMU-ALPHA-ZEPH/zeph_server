@@ -9,14 +9,18 @@ public record CourseResponse(
         String type,
         Boolean roundTrip,
         String region,
+        Long likeCount,
+        Boolean isLiked,
         LocalDateTime createdAt
 ) {
-    public static CourseResponse create(Course course) {
+    public static CourseResponse create(Course course, Long likeCount, Boolean isLiked) {
         return new CourseResponse(
                 course.getId(),
                 course.getType(),
                 course.getRoundTrip(),
                 course.getRegion(),
+                likeCount,
+                isLiked,
                 course.getCreatedAt()
         );
     }

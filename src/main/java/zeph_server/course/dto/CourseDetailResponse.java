@@ -8,16 +8,19 @@ public record CourseDetailResponse(
         Long id,
         String type,
         Float distanceKm,
-        PathData pathData
+        PathData pathData,
+        Long likeCount,
+        Boolean isLiked
 
 ) {
-    public static CourseDetailResponse create(Course course) {
+    public static CourseDetailResponse create(Course course, Long likeCount, Boolean isLiked) {
         return new CourseDetailResponse(
                 course.getId(),
                 course.getType(),
                 course.getDistanceKm(),
-                course.getPathData()
-
+                course.getPathData(),
+                likeCount,
+                isLiked
         );
     }
 }
