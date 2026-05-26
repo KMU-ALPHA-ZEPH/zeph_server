@@ -1,0 +1,29 @@
+# 운영(prod) 프로필. EC2에서 SPRING_PROFILES_ACTIVE=prod 로 활성화.
+# 민감/환경별 값은 모두 환경변수로 주입한다. (.env 아님)
+spring:
+  datasource:
+    url: ${DB_URL}            # 예: jdbc:postgresql://<rds-endpoint>:5432/zeph
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update        # 첫 배포: 테이블 자동 생성. 안정화 후 Flyway로 전환 예정
+    show-sql: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            # 예: https://api.example.com/login/oauth2/code/kakao
+            # 카카오 디벨로퍼 콘솔에도 동일 URI를 등록해야 함
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+
+ai:
+  server:
+    url: ${AI_SERVER_URL}     # 운영 AI 서버 주소
+
+logging:
+  level:
+    org.springframework.security: INFO

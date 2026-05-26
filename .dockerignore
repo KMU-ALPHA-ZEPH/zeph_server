@@ -1,0 +1,12 @@
+# 이미지에 들어가면 안 되거나 불필요한 것들
+.env
+.git
+.github
+.gradle
+.idea
+build
+out
+*.iml
+README.md
+HELP.md
+package-lock.json
