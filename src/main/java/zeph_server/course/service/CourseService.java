@@ -14,6 +14,8 @@ import zeph_server.course.dto.common.Point;
 import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
+
+import zeph_server.global.exception.NotFoundException;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.io.IOException;
@@ -31,6 +33,7 @@ public class CourseService {
     private final CourseLikeService courseLikeService;
     private final AiCourseClient aiCourseClient;
     private final ObjectMapper objectMapper;
+    private final GpxWriter gpxWriter;
 
     private List<RouteNodeResponse> loadMockRouteNodes() {
         try {
@@ -74,7 +77,7 @@ public class CourseService {
 
     public CourseDetailResponse getCourseById(Long id, Long userId) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 코스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 코스를 찾을 수 없습니다."));
 
         return CourseDetailResponse.create(
                 course,
@@ -153,6 +156,18 @@ public class CourseService {
 
     public Course findById(Long courseId) {
         return courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("course not found."));
+                .orElseThrow(() -> new NotFoundException("course not found."));
+    }
+
+    public String exportCourseGpx(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("해당 코스를 찾을 수 없습니다."));
+
+        PathData pathData = course.getPathData();
+        if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
+            throw new NotFoundException("해당 코스에 경로 데이터가 없습니다.");
+        }
+
+        return gpxWriter.writeRoute(course.getName(), pathData.points());
     }
 }
