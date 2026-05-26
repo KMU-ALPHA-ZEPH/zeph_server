@@ -22,7 +22,9 @@ public class ReverseGeoCalculator {
         KaKaoResponse.Document doc = response.documents().get(0);
         KaKaoResponse.Address addr = doc.address();
 
-        if (addr == null) return null;
+        if (addr == null) {
+            return null;
+        }
 
         return addr.region_1depth_name() + " " + addr.region_2depth_name();
     }

@@ -12,9 +12,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
-import org.springframework.web.bind.annotation.*;
-
-import java.nio.charset.StandardCharsets;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import zeph_server.course.dto.CourseDetailResponse;
 import zeph_server.course.dto.CourseResponse;
 import zeph_server.course.dto.RecommendCourseRequest;
@@ -22,6 +26,7 @@ import zeph_server.course.dto.RecommendCourseResponse;
 import zeph_server.course.service.CourseService;
 import zeph_server.global.security.CustomUserDetails;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Tag(name = "courses", description = "코스 API")
