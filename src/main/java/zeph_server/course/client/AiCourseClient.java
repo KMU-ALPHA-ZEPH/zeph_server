@@ -1,4 +1,4 @@
-package zeph_server.util;
+package zeph_server.course.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
