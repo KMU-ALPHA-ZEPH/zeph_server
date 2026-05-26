@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import zeph_server.course.domain.Course;
 import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.TokenProvider;
 import zeph_server.user.domain.User;

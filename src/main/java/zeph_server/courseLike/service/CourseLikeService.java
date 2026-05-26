@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
 import zeph_server.course.repository.CourseRepository;
-import zeph_server.course.service.CourseService;
 import zeph_server.courseLike.domain.CourseLike;
 import zeph_server.courseLike.repository.CourseLikeRepository;
 import zeph_server.global.exception.DuplicateException;
