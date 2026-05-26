@@ -7,10 +7,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
 import zeph_server.course.dto.CourseDetailResponse;
 import zeph_server.course.dto.CourseResponse;
 import zeph_server.course.dto.RecommendCourseRequest;
@@ -27,8 +31,7 @@ import java.util.List;
 public class CourseController {
     private final CourseService courseService;
 
-    // 코스 추천받을 때 type도 들어올거임 그니까 type을 3개 만드는 게 아니라 걍 type 받아서 코스 만드는걸로
-    @Operation(summary = "AI 기반 코스 추천", description = "AI를 이용해 코스를 생성한다.")
+    @Operation(summary = "AI 기반 코스 추천", description = "AI를 이용해 코스를 생성")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "추천 코스 생성 성공"),
             @ApiResponse(responseCode = "400", description = "추천에 필요한 필수 파라미터 누락 / 지원하지 않는 추천 타입"),
@@ -77,6 +80,23 @@ public class CourseController {
     ) {
         Long userId = userDetails.getUser().getId();
         return ResponseEntity.ok(courseService.getCourseById(courseId, userId));
+    }
+
+    @Operation(summary = "코스 GPX 다운로드", description = "코스 경로를 GPX 파일로 내려준다. 클라이언트가 다운로드/공유에 사용한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "GPX 생성 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 ID의 코스를 찾을 수 없음 / 경로 데이터 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/{courseId}/gpx")
+    public ResponseEntity<String> downloadCourseGpx(@PathVariable Long courseId) {
+        String gpx = courseService.exportCourseGpx(courseId);
+
+        return ResponseEntity.ok()
+                .contentType(new MediaType("application", "gpx+xml", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"course_" + courseId + ".gpx\"")
+                .body(gpx);
     }
 }
 
