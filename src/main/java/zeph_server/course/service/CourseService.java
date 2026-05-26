@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zeph_server.course.client.AiCourseClient;
 import zeph_server.course.domain.Course;
 import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
@@ -13,8 +14,8 @@ import zeph_server.course.dto.common.Point;
 import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
+
 import zeph_server.global.exception.NotFoundException;
-import zeph_server.util.AiCourseClient;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.io.IOException;
