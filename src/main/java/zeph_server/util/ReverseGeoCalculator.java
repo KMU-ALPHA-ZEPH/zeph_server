@@ -9,7 +9,7 @@ import zeph_server.course.dto.KaKaoResponse;
 @Component
 @RequiredArgsConstructor
 public class ReverseGeoCalculator {
-    @Value("${kakao.api.key}")
+    @Value("${KAKAO_API_KEY}")
     private String apiKey;
 
     private final KaKaoLocalClient kaKaoLocalClient;

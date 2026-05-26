@@ -8,7 +8,7 @@ import zeph_server.course.dto.RouteNodeResponse;
 
 import java.util.List;
 
-@FeignClient(name = "AiCourseClient", url = "${ai.server.url}")
+@FeignClient(name = "AiCourseClient", url = "${AI_SERVER_URL:http://localhost:8000}")
 public interface AiCourseClient {
 
     @PostMapping("/recommend")
