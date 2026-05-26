@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import zeph_server.course.dto.CourseDetailResponse;
 import zeph_server.course.dto.CourseResponse;
 import zeph_server.course.dto.RecommendCourseRequest;
+import zeph_server.course.dto.RecommendCourseResponse;
 import zeph_server.course.service.CourseService;
 import zeph_server.global.security.CustomUserDetails;
 
@@ -34,12 +35,15 @@ public class CourseController {
             @ApiResponse(responseCode = "500", description = "AI와의 통신 실패 or 알고리즘 내부 오류")
     })
     @PostMapping("/recommend")
-    public ResponseEntity<?> RecommendCourse(
-            @RequestBody RecommendCourseRequest requestDTO,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+    public ResponseEntity<RecommendCourseResponse> recommendCourse(
+            @RequestBody RecommendCourseRequest requestDTO
+//            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        courseService.recommendCourse(requestDTO);
-        return ResponseEntity.ok().build();
+
+        RecommendCourseResponse response =
+                courseService.recommendCourse(requestDTO);
+
+        return ResponseEntity.ok(response);
     }
 
     // 인기 경로에서 사용 (인기 경로 목록 조회)

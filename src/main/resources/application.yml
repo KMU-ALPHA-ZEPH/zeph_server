@@ -39,6 +39,11 @@ kakao:
   api:
     key: ${KAKAO_API_KEY}
 
+
+ai:
+  server:
+    url: http://localhost:8000
+    
 springdoc:
   swagger-ui:
     path: /swagger

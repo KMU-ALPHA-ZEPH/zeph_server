@@ -1,19 +1,22 @@
 package zeph_server.course.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
 import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
+import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
+import zeph_server.util.AiCourseClient;
 import zeph_server.util.ReverseGeoCalculator;
 
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -26,6 +29,22 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final CourseLikeService courseLikeService;
+    private final AiCourseClient aiCourseClient;
+    private final ObjectMapper objectMapper;
+
+    private List<RouteNodeResponse> loadMockRouteNodes() {
+        try {
+            ClassPathResource resource = new ClassPathResource("routes_output.json");
+
+            return objectMapper.readValue(
+                    resource.getInputStream(),
+                    new TypeReference<>() {
+                    }
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("추천 경로 mock JSON 파일을 읽는 중 오류가 발생했습니다.", e);
+        }
+    }
 
     public List<CourseResponse> getAllCourses(String region, String type, Long userId) {
         List<Course> courses;
@@ -64,7 +83,45 @@ public class CourseService {
         );
     }
 
-    public void recommendCourse(RecommendCourseRequest requestDTO) {
+    public RecommendCourseResponse recommendCourse(RecommendCourseRequest requestDTO) {
+        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
+//        List<RouteNodeResponse> routeNodes =
+//                aiCourseClient.requestRecommendCourse(requestDTO);
+
+        List<Point> points = routeNodes.stream()
+                .map(node -> new Point(
+                        node.id(),
+                        node.lat(),
+                        node.lng(),
+                        node.segmentToNext() == null ? null :
+                                new SegmentInfo(
+                                        node.segmentToNext().lengthM(),
+                                        node.segmentToNext().avgBrightness(),
+                                        node.segmentToNext().slopeType(),
+                                        node.segmentToNext().nearPark(),
+                                        node.segmentToNext().trafficlightCount(),
+                                        node.segmentToNext().trafficVolumeScore()
+                                )
+                ))
+                .toList();
+
+        PathData pathData = new PathData(points);
+
+        double totalDistanceM = routeNodes.stream()
+                .filter(node -> node.segmentToNext() != null)
+                .filter(node -> node.segmentToNext().lengthM() != null)
+                .mapToDouble(node -> node.segmentToNext().lengthM())
+                .sum();
+
+        return new RecommendCourseResponse(
+                requestDTO.distanceKm(),
+                totalDistanceM / 1000.0,
+                requestDTO.type(),
+                requestDTO.roundTrip(),
+                requestDTO.startLat(),
+                requestDTO.startLng(),
+                pathData
+        );
     }
 
 

@@ -18,6 +18,7 @@ import zeph_server.global.oauth2.CustomOAuth2UserService;
 import zeph_server.global.oauth2.OAuth2SuccessHandler;
 
 import java.util.List;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
