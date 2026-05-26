@@ -6,10 +6,35 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponseDTO>
+    handleCustomException(
+            CustomException e
+    ){
+
+        Instant now = Instant.now();
+
+        ErrorCode errorCode =
+                e.getErrorCode();
+
+        return ResponseEntity
+                .status(
+                        errorCode.getHttpStatus()
+                )
+                .body(
+                        ErrorResponseDTO.create(
+                                errorCode,
+                                now
+                        )
+                );
+    }
 
     // 404 - 리소스 없음
     @ExceptionHandler(NotFoundException.class)
@@ -32,21 +57,50 @@ public class GlobalExceptionHandler {
                 .body(Map.of("message", e.getMessage()));
     }
 
-    // 400 - DTO 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> fieldError.getDefaultMessage())
-                .findFirst()
-                .orElse("잘못된 요청");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", message));
+    public ResponseEntity<ErrorResponseDTO>
+    handleValidationException(
+            MethodArgumentNotValidException e
+    ){
+
+        Instant now = Instant.now();
+
+        String detail = e.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(
+                        ErrorResponseDTO.builder()
+                                .code(errorCode.name())
+                                .message(detail)
+                                .status(errorCode.getHttpStatus().value())
+                                .timestamp(now)
+                                .build()
+                );
     }
 
-    // 500 - 그 외 모든 예외
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneral(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "서버 내부 오류"));
+    public ResponseEntity<ErrorResponseDTO>
+    handleException(
+            Exception e
+    ){
+
+        Instant now = Instant.now();
+
+        return ResponseEntity
+                .status(
+                        GlobalErrorCode.DEFAULT
+                                .getHttpStatus()
+                )
+                .body(
+                        ErrorResponseDTO.create(
+                                e,
+                                now
+                        )
+                );
     }
 }
