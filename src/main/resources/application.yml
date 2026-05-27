@@ -5,15 +5,15 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/zeph}
-    username: ${DB_USERNAME:sangrae}
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:none}
-    show-sql: ${JPA_SHOW_SQL:false}
+      ddl-auto: ${JPA_DDL_AUTO}
+    show-sql: ${JPA_SHOW_SQL}
 
   security:
     oauth2:
@@ -23,7 +23,7 @@ spring:
             client-id: ${KAKAO_CLIENT_ID}
             client-name: Kakao
             authorization-grant-type: authorization_code
-            redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/login/oauth2/code/kakao}
+            redirect-uri: ${KAKAO_REDIRECT_URI}
             client-authentication-method: client_secret_post
             scope:
               - profile_nickname
@@ -43,11 +43,10 @@ kakao:
 
 ai:
   server:
-    url: ${AI_SERVER_URL:http://localhost:8000}
+    url: ${AI_SERVER_URL}
 
 server:
   port: ${SERVER_PORT:8080}
-  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:framework}
 
 springdoc:
   swagger-ui:
