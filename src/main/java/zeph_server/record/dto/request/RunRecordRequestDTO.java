@@ -1,6 +1,7 @@
 package zeph_server.record.dto.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
@@ -38,6 +39,14 @@ public class RunRecordRequestDTO {
     @NotEmpty
     @Valid
     private List<PointDTO> points;
+
+    @AssertTrue(message = "pausedSec must not exceed durationSec")
+    public boolean isPausedSecValid() {
+        if (durationSec == null || pausedSec == null) {
+            return true;
+        }
+        return pausedSec <= durationSec;
+    }
 
     @Getter
     public static class PointDTO {
