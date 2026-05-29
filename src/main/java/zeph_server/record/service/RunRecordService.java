@@ -145,7 +145,7 @@ public class RunRecordService {
 
         if (period != Period.ALL) {
             if (date == null) {
-                throw new CustomException(GlobalErrorCode.INVALID_REQUEST);
+                date = LocalDate.now();
             }
             switch (period) {
                 case WEEK -> {
@@ -171,6 +171,9 @@ public class RunRecordService {
         List<RunRecord> records = runRecordRepository.findStatsRecords(userId, typeFilter, start, end);
 
         int runCount = records.size();
+        long totalDurationSec = records.stream()
+                .mapToLong(RunRecord::getDurationSec)
+                .sum();
         long totalMovingSec = records.stream()
                 .mapToLong(r -> r.getDurationSec() - r.getPausedSec())
                 .sum();
@@ -188,7 +191,7 @@ public class RunRecordService {
         return RunStatsResponseDTO.builder()
                 .runCount(runCount)
                 .avgPace(avgPace)
-                .totalDurationSec((int) totalMovingSec)
+                .totalDurationSec((int) totalDurationSec)
                 .totalDistanceKm(totalDistanceKm)
                 .breakdown(breakdown)
                 .build();
@@ -213,7 +216,7 @@ public class RunRecordService {
     }
 
     private RunRecord createRunRecord(Long userId, RunRecordRequestDTO dto, Course course) {
-        RunRecord runRecod =
+        RunRecord runRecord =
                 RunRecord.builder()
                         .userId(userId)
                         .course(course)
@@ -221,10 +224,10 @@ public class RunRecordService {
                         .endTime(dto.getEndTime())
                         .distanceKm(dto.getDistanceKm())
                         .durationSec(dto.getDurationSec())
-                        .pausedSec(dto.getPausedSec() == null ? 0 : dto.getPausedSec())
+                        .pausedSec(dto.getPausedSec())
                         .build();
 
-        return runRecordRepository.save(runRecod);
+        return runRecordRepository.save(runRecord);
     }
 
     private void verifyOwnership(RunRecord record, Long userId) {

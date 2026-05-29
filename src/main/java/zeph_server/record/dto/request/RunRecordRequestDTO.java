@@ -6,6 +6,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 
@@ -25,11 +26,11 @@ public class RunRecordRequestDTO {
     private LocalDateTime endTime;
 
     @NotNull
-    @PositiveOrZero
+    @Positive
     private Double distanceKm;
 
     @NotNull
-    @PositiveOrZero
+    @Positive
     private Integer durationSec;
 
     @NotNull
@@ -40,12 +41,20 @@ public class RunRecordRequestDTO {
     @Valid
     private List<PointDTO> points;
 
-    @AssertTrue(message = "pausedSec must not exceed durationSec")
+    @AssertTrue(message = "일시정지 시간은 총 경과시간을 넘을 수 없습니다")
     public boolean isPausedSecValid() {
         if (durationSec == null || pausedSec == null) {
             return true;
         }
         return pausedSec <= durationSec;
+    }
+
+    @AssertTrue(message = "종료 시각은 시작 시각보다 뒤여야 합니다")
+    public boolean isTimeRangeValid() {
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        return endTime.isAfter(startTime);
     }
 
     @Getter
