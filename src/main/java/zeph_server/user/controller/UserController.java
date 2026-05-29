@@ -69,6 +69,20 @@ public class UserController {
         return ResponseEntity.ok(authResponse);
     }
 
+    @Operation(summary = "로그아웃", description = "JWT 인증 쿠키를 만료시켜 로그아웃한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PostMapping("/users/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        response.addHeader(
+                jwtCookieProvider.headerName(),
+                jwtCookieProvider.createExpiredCookieHeader()
+        );
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "카카오 로그인 콜백", description = "카카오 OAuth2 인증 코드 콜백을 처리한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "콜백 처리 성공"),
