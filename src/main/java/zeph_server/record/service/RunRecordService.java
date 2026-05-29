@@ -302,19 +302,15 @@ public class RunRecordService {
     }
 
     private <T> List<T> downsample(List<T> points, int targetSize) {
-        if (points == null || points.size() <= targetSize) {
+        if (points == null || targetSize <= 1 || points.size() <= targetSize) {
             return points;
         }
 
-        int step = points.size() / targetSize;
-        List<T> result = new ArrayList<>();
-        for (int i = 0; i < points.size(); i += step) {
-            result.add(points.get(i));
-        }
-
-        T lastSource = points.get(points.size() - 1);
-        if (result.get(result.size() - 1) != lastSource) {
-            result.add(lastSource);
+        int n = points.size();
+        List<T> result = new ArrayList<>(targetSize);
+        for (int i = 0; i < targetSize; i++) {
+            int idx = (int) Math.round((double) i * (n - 1) / (targetSize - 1));
+            result.add(points.get(idx));
         }
         return result;
     }
