@@ -1,13 +1,13 @@
 package zeph_server.global.oauth2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import zeph_server.global.dto.AuthResponseDto;
+import zeph_server.global.jwt.JwtCookieProvider;
 import zeph_server.global.jwt.TokenProvider;
 import zeph_server.global.security.CustomUserDetails;
 
@@ -18,6 +18,10 @@ import java.io.IOException;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final TokenProvider tokenProvider;
+    private final JwtCookieProvider jwtCookieProvider;
+
+    @Value("${FRONTEND_REDIRECT_URL:https://www.kmuzeph.site/popular-page}")
+    private String frontendRedirectUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -32,15 +36,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         System.out.println("OAuth2 로그인 성공");
 
-        AuthResponseDto dto = new AuthResponseDto(
-                user.getUser().getKakaoId(),
-                user.getUser().getName(),
-                user.getUser().getEmail(),
-                user.getUser().getProfileImageUrl(),
-                token
-        );
-
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(dto));
+        response.addHeader(jwtCookieProvider.headerName(), jwtCookieProvider.createCookieHeader(token));
+        response.sendRedirect(frontendRedirectUrl);
     }
 }

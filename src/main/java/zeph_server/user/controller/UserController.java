@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zeph_server.global.dto.AuthResponseDto;
+import zeph_server.global.jwt.JwtCookieProvider;
 import zeph_server.user.dto.EmailLoginRequest;
 import zeph_server.user.dto.EmailSignupRequest;
 import zeph_server.user.dto.UserDto;
@@ -32,6 +34,7 @@ import zeph_server.user.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final JwtCookieProvider jwtCookieProvider;
 
     @Operation(summary = "이메일 회원가입", description = "이메일, 비밀번호, 이름으로 신규 사용자를 생성한다.")
     @ApiResponses(value = {
@@ -54,8 +57,16 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @PostMapping("/users/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody EmailLoginRequest request) {
-        return ResponseEntity.ok(userService.login(request));
+    public ResponseEntity<AuthResponseDto> login(
+            @Valid @RequestBody EmailLoginRequest request,
+            HttpServletResponse response
+    ) {
+        AuthResponseDto authResponse = userService.login(request);
+        response.addHeader(
+                jwtCookieProvider.headerName(),
+                jwtCookieProvider.createCookieHeader(authResponse.token())
+        );
+        return ResponseEntity.ok(authResponse);
     }
 
     @Operation(summary = "카카오 로그인 콜백", description = "카카오 OAuth2 인증 코드 콜백을 처리한다.")

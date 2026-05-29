@@ -20,6 +20,7 @@ import zeph_server.user.domain.User;
 @RequiredArgsConstructor
 public class TokenFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
+    private final JwtCookieProvider jwtCookieProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,9 +28,8 @@ public class TokenFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        String token = resolveToken(request);
+        if (token != null) {
 
             if (tokenProvider.validate(token)) {
                 Long userId = tokenProvider.getUserId(token);
@@ -53,5 +53,14 @@ public class TokenFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+
+        return jwtCookieProvider.resolveToken(request);
     }
 }
