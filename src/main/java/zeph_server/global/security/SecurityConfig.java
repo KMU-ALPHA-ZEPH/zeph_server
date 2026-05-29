@@ -22,19 +22,23 @@ import java.util.List;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import zeph_server.global.jwt.JwtCookieProvider;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final CustomOAuth2UserService oAuth2UserService;
     private final TokenProvider tokenProvider;
+    private final JwtCookieProvider jwtCookieProvider;
     private final OAuth2SuccessHandler successHandler;
 
     public SecurityConfig(CustomOAuth2UserService oAuth2UserService,
                           TokenProvider tokenProvider,
+                          JwtCookieProvider jwtCookieProvider,
                           OAuth2SuccessHandler successHandler) {
         this.oAuth2UserService = oAuth2UserService;
         this.tokenProvider = tokenProvider;
+        this.jwtCookieProvider = jwtCookieProvider;
         this.successHandler = successHandler;
     }
 
@@ -68,7 +72,7 @@ public class SecurityConfig {
                         .successHandler(successHandler)
                 )
                 .addFilterBefore(
-                        new TokenFilter(tokenProvider),
+                        new TokenFilter(tokenProvider, jwtCookieProvider),
                         UsernamePasswordAuthenticationFilter.class
                 );
 
