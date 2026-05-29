@@ -47,6 +47,10 @@ ai:
 
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:framework}
+
+app:
+  server-url: ${API_SERVER_URL:https://api.kmuzeph.site}
 
 springdoc:
   swagger-ui:
