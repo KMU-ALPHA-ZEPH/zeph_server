@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/users/signup",
                                 "/users/login",
                                 "/users/logout",
+                                "/users/password-reset/request",
+                                "/users/password-reset/confirm",
                                 "/login",
                                 "/login/**",
                                 "/oauth2/**",
