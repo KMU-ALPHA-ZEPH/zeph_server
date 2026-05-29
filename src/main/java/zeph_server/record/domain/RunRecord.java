@@ -82,6 +82,6 @@ public class RunRecord {
     }
 
     public void updateMemo(String memo) {
-        this.memo = memo;
+        this.memo = (memo == null) ? "" : memo;
     }
 }
