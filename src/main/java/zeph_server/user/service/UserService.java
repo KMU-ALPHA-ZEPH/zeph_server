@@ -11,6 +11,8 @@ import zeph_server.global.jwt.TokenProvider;
 import zeph_server.user.domain.User;
 import zeph_server.user.dto.EmailLoginRequest;
 import zeph_server.user.dto.EmailSignupRequest;
+import zeph_server.user.dto.PasswordResetConfirmRequest;
+import zeph_server.user.dto.PasswordResetRequest;
 import zeph_server.user.dto.UserDto;
 import zeph_server.user.dto.UserUpdateDto;
 import zeph_server.user.repository.UserRepository;
@@ -23,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
+    private final PasswordResetMailService passwordResetMailService;
 
     @Transactional
     public void signup(EmailSignupRequest request) {
@@ -63,6 +66,47 @@ public class UserService {
                 user.getProfileImageUrl(),
                 token
         );
+    }
+
+    public void requestPasswordReset(PasswordResetRequest request) {
+        userRepository.findByEmail(request.email())
+                .filter(user -> user.getPassword() != null)
+                .ifPresent(user -> {
+                    String token = tokenProvider.createPasswordResetToken(
+                            user.getId(),
+                            user.getPassword()
+                    );
+                    passwordResetMailService.sendPasswordResetMail(user.getEmail(), token);
+                });
+    }
+
+    @Transactional
+    public void resetPassword(PasswordResetConfirmRequest request) {
+        try {
+            Long userId = tokenProvider.getPasswordResetUserId(request.token());
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "유효하지 않은 비밀번호 재설정 토큰입니다."
+                    ));
+
+            if (user.getPassword() == null) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "이메일 로그인 계정이 아닙니다."
+                );
+            }
+
+            tokenProvider.validatePasswordResetPasswordHash(request.token(), user.getPassword());
+            user.setPassword(passwordEncoder.encode(request.newPassword()));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "유효하지 않은 비밀번호 재설정 토큰입니다."
+            );
+        }
     }
 
     public UserDto getProfile(Long id) {

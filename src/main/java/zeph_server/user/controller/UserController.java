@@ -26,6 +26,8 @@ import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.JwtCookieProvider;
 import zeph_server.user.dto.EmailLoginRequest;
 import zeph_server.user.dto.EmailSignupRequest;
+import zeph_server.user.dto.PasswordResetConfirmRequest;
+import zeph_server.user.dto.PasswordResetRequest;
 import zeph_server.user.dto.UserDto;
 import zeph_server.user.dto.UserUpdateDto;
 import zeph_server.user.service.UserService;
@@ -96,6 +98,34 @@ public class UserController {
                 jwtCookieProvider.headerName(),
                 jwtCookieProvider.createExpiredSessionCookieHeader()
         );
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "비밀번호 재설정 메일 발송", description = "이메일 계정에 비밀번호 재설정 링크를 발송한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "요청 처리 성공"),
+            @ApiResponse(responseCode = "400", description = "이메일 형식 오류 또는 필수 필드 누락"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PostMapping("/users/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        userService.requestPasswordReset(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "비밀번호 재설정", description = "비밀번호 재설정 토큰과 새 비밀번호로 비밀번호를 변경한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "비밀번호 재설정 성공"),
+            @ApiResponse(responseCode = "400", description = "토큰 오류 또는 잘못된 요청"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PostMapping("/users/password-reset/confirm")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody PasswordResetConfirmRequest request
+    ) {
+        userService.resetPassword(request);
         return ResponseEntity.noContent().build();
     }
 
