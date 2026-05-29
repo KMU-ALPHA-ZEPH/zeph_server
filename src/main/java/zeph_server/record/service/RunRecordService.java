@@ -1,6 +1,8 @@
 package zeph_server.record.service;
 
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
@@ -168,7 +170,7 @@ public class RunRecordService {
 
         String typeFilter = (type == null || "ALL".equalsIgnoreCase(type)) ? null : type;
 
-        List<RunRecord> records = runRecordRepository.findStatsRecords(userId, typeFilter, start, end);
+        List<RunRecord> records = runRecordRepository.findAll(statsSpec(userId, typeFilter, start, end));
 
         int runCount = records.size();
         long totalDurationSec = records.stream()
@@ -197,8 +199,27 @@ public class RunRecordService {
                 .build();
     }
 
-
-
+    private Specification<RunRecord> statsSpec(
+            Long userId,
+            String type,
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("userId"), userId));
+            if (type != null) {
+                predicates.add(cb.equal(root.get("course").get("type"), type));
+            }
+            if (start != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startTime"), start));
+            }
+            if (end != null) {
+                predicates.add(cb.lessThan(root.get("startTime"), end));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
     private Course findCourse(Long courseId) {
         return courseRepository.findById(courseId).orElseThrow(() ->

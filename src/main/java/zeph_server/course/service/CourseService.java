@@ -92,9 +92,9 @@ public class CourseService {
     }
 
     public RecommendCourseResponse recommendCourse(RecommendCourseRequest requestDTO) {
-        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
-//        List<RouteNodeResponse> routeNodes =
-//                aiCourseClient.requestRecommendCourse(requestDTO);
+//        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
+        List<RouteNodeResponse> routeNodes =
+                aiCourseClient.requestRecommendCourse(requestDTO);
 
         List<Point> points = routeNodes.stream()
                 .map(node -> new Point(
