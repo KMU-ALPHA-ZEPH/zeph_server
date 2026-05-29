@@ -33,6 +33,17 @@ public class JwtCookieProvider {
                 .toString();
     }
 
+    public String createExpiredCookieHeader() {
+        return ResponseCookie.from(cookieName, "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(0)
+                .build()
+                .toString();
+    }
+
     public String resolveToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
