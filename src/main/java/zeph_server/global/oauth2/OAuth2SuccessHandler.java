@@ -22,7 +22,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final TokenProvider tokenProvider;
     private final JwtCookieProvider jwtCookieProvider;
 
-    @Value("${FRONTEND_REDIRECT_URL:https://www.kmuzeph.site/popular-page}")
+    @Value("${FRONTEND_REDIRECT_URL:https://www.kmuzeph.site/splash}")
     private String frontendRedirectUrl;
 
     @Override
