@@ -4,6 +4,14 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          AiCourseClient:
+            connectTimeout: 5000
+            readTimeout: 120000
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

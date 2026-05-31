@@ -8,12 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.client.AiCourseClient;
 import zeph_server.course.domain.Course;
-import zeph_server.course.dto.CourseDetailResponse;
-import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.CreateCourseRequest;
-import zeph_server.course.dto.RecommendCourseRequest;
-import zeph_server.course.dto.RecommendCourseResponse;
-import zeph_server.course.dto.RouteNodeResponse;
+import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
 import zeph_server.course.dto.common.SegmentInfo;
@@ -93,9 +88,10 @@ public class CourseService {
 
     public RecommendCourseResponse recommendCourse(RecommendCourseRequest requestDTO) {
 //        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
-        List<RouteNodeResponse> routeNodes =
+        AiRecommendResponse aiResponse =
                 aiCourseClient.requestRecommendCourse(requestDTO);
 
+        List<RouteNodeResponse> routeNodes = aiResponse.route();
         List<Point> points = routeNodes.stream()
                 .map(node -> new Point(
                         node.id(),
