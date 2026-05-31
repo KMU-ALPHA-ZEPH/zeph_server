@@ -91,7 +91,12 @@ public class CourseService {
         AiRecommendResponse aiResponse =
                 aiCourseClient.requestRecommendCourse(requestDTO);
 
-        List<RouteNodeResponse> routeNodes = aiResponse.route();
+        List<RouteNodeResponse> routeNodes = aiResponse.routes();
+        if (routeNodes == null || routeNodes.isEmpty()) {
+
+            throw new IllegalStateException("AI가 추천 경로를 반환하지 않았습니다.");
+
+        }
         List<Point> points = routeNodes.stream()
                 .map(node -> new Point(
                         node.id(),
@@ -124,7 +129,8 @@ public class CourseService {
                 requestDTO.roundTrip(),
                 requestDTO.startLat(),
                 requestDTO.startLng(),
-                pathData
+                pathData,
+                aiResponse.preferenceSummary()
         );
     }
 
