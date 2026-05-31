@@ -91,7 +91,12 @@ public class CourseService {
         AiRecommendResponse aiResponse =
                 aiCourseClient.requestRecommendCourse(requestDTO);
 
-        List<RouteNodeResponse> routeNodes = aiResponse.routes();
+        RecommendedRouteResponse route =
+                aiResponse.routes().get(0);
+
+        List<RouteNodeResponse> routeNodes =
+                route.points();
+        
         if (routeNodes == null || routeNodes.isEmpty()) {
 
             throw new IllegalStateException("AI가 추천 경로를 반환하지 않았습니다.");
