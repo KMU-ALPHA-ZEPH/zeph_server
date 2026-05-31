@@ -42,7 +42,7 @@ public class CourseController {
             @ApiResponse(responseCode = "400", description = "추천에 필요한 필수 파라미터 누락 / 지원하지 않는 추천 타입"),
             @ApiResponse(responseCode = "500", description = "AI와의 통신 실패 or 알고리즘 내부 오류")
     })
-    @PostMapping("/recommend")
+    @PostMapping("")
     public ResponseEntity<RecommendCourseResponse> recommendCourse(
             @RequestBody RecommendCourseRequest requestDTO
 //            @AuthenticationPrincipal CustomUserDetails userDetails
