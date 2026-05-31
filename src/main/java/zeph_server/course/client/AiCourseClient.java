@@ -11,7 +11,7 @@ import java.util.List;
 @FeignClient(name = "AiCourseClient", url = "${AI_SERVER_URL:http://localhost:8000}")
 public interface AiCourseClient {
 
-    @PostMapping("/recommend")
+    @PostMapping("")
     List<RouteNodeResponse> requestRecommendCourse(
             @RequestBody RecommendCourseRequest requestDTO
     );
