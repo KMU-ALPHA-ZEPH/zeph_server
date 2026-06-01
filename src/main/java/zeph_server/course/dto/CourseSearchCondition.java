@@ -9,31 +9,31 @@ import zeph_server.global.exception.GlobalErrorCode;
  // 쿼리 파라미터가 많아 단일 조건 객체로 묶어 @ModelAttribute 로 바인딩
 
 public record CourseSearchCondition(
-        @Schema(description = "지역명 문자열 필터", example = "서울특별시 강남구")
+        @Schema(description = "지역명 문자열 필터")
         String region,
 
-        @Schema(description = "코스 타입 필터", example = "walk")
+        @Schema(description = "코스 타입 필터")
         String type,
 
         @Schema(description = "정렬 기준", allowableValues = {"DISTANCE_ASC", "DISTANCE_DESC", "NEAREST", "POPULAR"})
         String sort,
 
-        @Schema(description = "기준 위치 위도 (반경 필터/가까운순 공통)", example = "37.5")
+        @Schema(description = "기준 위치 위도 (반경 필터/가까운순 공통)")
         Double lat,
 
-        @Schema(description = "기준 위치 경도 (반경 필터/가까운순 공통)", example = "127.0")
+        @Schema(description = "기준 위치 경도 (반경 필터/가까운순 공통)")
         Double lng,
 
-        @Schema(description = "기준 위치로부터 반경(km) 이내 코스만 (lat·lng 필수)", example = "5")
+        @Schema(description = "기준 위치로부터 반경(km) 이내 코스만 (lat·lng 필수)")
         Double radiusKm,
 
-        @Schema(description = "코스 경로 길이 하한(km)", example = "3")
+        @Schema(description = "코스 경로 길이 하한(km)")
         Double minDistanceKm,
 
-        @Schema(description = "코스 경로 길이 상한(km)", example = "10")
+        @Schema(description = "코스 경로 길이 상한(km)")
         Double maxDistanceKm,
 
-        @Schema(description = "true 시 로그인 유저가 좋아요한 코스만 조회", example = "false")
+        @Schema(description = "true 시 로그인 유저가 좋아요한 코스만 조회")
         Boolean liked
 ) {
     public boolean isLiked() {
