@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.client.AiCourseClient;
 import zeph_server.course.domain.Course;
+import zeph_server.course.domain.CourseSortType;
 import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
@@ -16,14 +17,20 @@ import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
 
+import zeph_server.global.exception.CustomException;
 import zeph_server.global.exception.DuplicateException;
+import zeph_server.global.exception.GlobalErrorCode;
 import zeph_server.global.exception.NotFoundException;
 import zeph_server.user.domain.User;
 import zeph_server.user.service.UserService;
+import zeph_server.util.GeoUtils;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +61,8 @@ public class CourseService {
         }
     }
 
-    public List<CourseResponse> getAllCourses(String region, String type, Long userId) {
+    public List<CourseResponse> getAllCourses(String region, String type, String sort,
+                                              Double lat, Double lng, Long userId) {
         List<Course> courses;
 
         boolean hasRegion = region != null && !region.isBlank();
@@ -70,14 +78,58 @@ public class CourseService {
             courses = courseRepository.findAll();
         }
 
-        return courses.stream()
+        CourseSortType sortType = CourseSortType.from(sort);
+
+        Map<Long, Long> likeCountMap = courses.stream()
+                .collect(Collectors.toMap(
+                        Course::getId,
+                        course -> courseLikeService.getLikeCount(course.getId())
+                ));
+
+        List<Course> sorted = courses.stream()
+                .sorted(buildComparator(sortType, likeCountMap, lat, lng))
+                .toList();
+
+        return sorted.stream()
                 .map(course -> CourseResponse.create(
                                 course,
-                                courseLikeService.getLikeCount(course.getId()),
+                                likeCountMap.get(course.getId()),
                                 courseLikeService.isLiked(course.getId(), userId)
                         )
                 )
                 .toList();
+    }
+
+    private Comparator<Course> buildComparator(CourseSortType sortType,
+                                               Map<Long, Long> likeCountMap,
+                                               Double lat, Double lng) {
+        return switch (sortType) {
+            case DISTANCE_ASC -> Comparator.comparing(Course::getDistanceKm);
+            case DISTANCE_DESC -> Comparator.comparing(Course::getDistanceKm).reversed();
+            case POPULAR -> Comparator
+                    .comparingLong((Course course) -> likeCountMap.getOrDefault(course.getId(), 0L))
+                    .reversed();
+            case NEAREST -> {
+                if (lat == null || lng == null) {
+                    throw new CustomException(GlobalErrorCode.INVALID_REQUEST);
+                }
+                yield Comparator.comparingDouble(course -> distanceFromUser(course, lat, lng));
+            }
+        };
+    }
+
+    // 코스 시작점과 사용자 설정 위치 사이의 직선 거리.
+    // 경로 데이터가 없으면 정렬 시 맨 뒤로 보낸다.
+    private double distanceFromUser(Course course, double lat, double lng) {
+        PathData pathData = course.getPathData();
+        if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
+            return Double.MAX_VALUE;
+        }
+        Point start = pathData.points().get(0);
+        if (start.lat() == null || start.lng() == null) {
+            return Double.MAX_VALUE;
+        }
+        return GeoUtils.haversineKm(lat, lng, start.lat(), start.lng());
     }
 
     public CourseDetailResponse getCourseById(Long id, Long userId) {
