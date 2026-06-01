@@ -1,6 +1,7 @@
 package zeph_server.group.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +27,9 @@ public class GroupService {
     private final ScrapRepository scrapRepository;
     private final UserRepository userRepository;
     private final S3ImageService s3ImageService;
+
+    @Value("${aws.s3.default-group-image-key:defaults/group.png}")
+    private String defaultGroupImageKey;
 
     @Transactional
     public void addGroup(AddGroupRequest requestDTO, Long userId) {
@@ -59,7 +63,7 @@ public class GroupService {
                 .map(group -> GroupResponse.from(
                         group,
                         scrapRepository.countByGroupId(group.getId()),
-                        s3ImageService.toPublicUrl(group.getImageKey())
+                        groupImageUrl(group)
                 ))
                 .toList();
     }
@@ -85,12 +89,15 @@ public class GroupService {
         if (!group.getUser().getId().equals(userId)) {
             throw new ForbiddenException("권한 없음");
         }
-        if (!group.getName().equals(name)
-                && groupRepository.existsByUserIdAndName(userId, name)) {
+        String nextName = name == null || name.isBlank() ? group.getName() : name;
+        String nextDescription = description == null ? group.getDescription() : description;
+
+        if (!group.getName().equals(nextName)
+                && groupRepository.existsByUserIdAndName(userId, nextName)) {
             throw new DuplicateException("이미 존재하는 폴더 이름입니다");
         }
 
-        group.update(name, description);
+        group.update(nextName, nextDescription);
         if (image != null && !image.isEmpty()) {
             group.updateImage(s3ImageService.uploadGroupImage(groupId, image));
         }
@@ -99,5 +106,12 @@ public class GroupService {
 
     public Group findById(Long groupId) {
         return groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("폴더를 찾을 수 없습니다"));
+    }
+
+    private String groupImageUrl(Group group) {
+        if (group.getImageKey() != null && !group.getImageKey().isBlank()) {
+            return s3ImageService.toPublicUrl(group.getImageKey());
+        }
+        return s3ImageService.toPublicUrl(defaultGroupImageKey);
     }
 }

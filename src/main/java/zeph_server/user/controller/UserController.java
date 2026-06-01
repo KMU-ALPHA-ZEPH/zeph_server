@@ -179,7 +179,7 @@ public class UserController {
     public ResponseEntity<Void> updateProfileWithImage(
             @Parameter(description = "사용자 ID", required = true)
             @PathVariable("id") Long id,
-            @RequestPart("name") String name,
+            @RequestPart(value = "name", required = false) String name,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         userService.updateProfile(id, name, image);

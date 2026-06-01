@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,6 +30,9 @@ public class UserService {
     private final TokenProvider tokenProvider;
     private final PasswordResetMailService passwordResetMailService;
     private final S3ImageService s3ImageService;
+
+    @Value("${aws.s3.default-profile-image-key:defaults/profile.png}")
+    private String defaultProfileImageKey;
 
     @Transactional
     public void signup(EmailSignupRequest request) {
@@ -140,7 +144,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        user.setName(name);
+        if (name != null && !name.isBlank()) {
+            user.setName(name);
+        }
         if (image != null && !image.isEmpty()) {
             user.setProfileImageKey(s3ImageService.uploadProfileImage(id, image));
         }
@@ -161,6 +167,9 @@ public class UserService {
         if (user.getProfileImageKey() != null && !user.getProfileImageKey().isBlank()) {
             return s3ImageService.toPublicUrl(user.getProfileImageKey());
         }
-        return user.getProfileImageUrl();
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isBlank()) {
+            return user.getProfileImageUrl();
+        }
+        return s3ImageService.toPublicUrl(defaultProfileImageKey);
     }
 }
