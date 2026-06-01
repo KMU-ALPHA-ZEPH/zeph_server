@@ -203,6 +203,7 @@ public class CourseService {
         }
 
         course.update(requestDTO.name());
+        course.update(requestDTO.description());
 
     }
 }
