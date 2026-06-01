@@ -85,4 +85,27 @@ public class ScrapService {
                 .map(ScrapPreviewResponse::from)
                 .toList();
     }
+
+    @Transactional
+    public void updateScrapGroup(Long scrapId, Long groupId, Long userId) {
+        Scrap scrap = scrapRepository.findById(scrapId)
+                .orElseThrow(() -> new NotFoundException("Scrap Not Found"));
+
+        if (!scrap.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        if (groupId == null) {
+            scrap.updateGroup(null);
+            return;
+        }
+
+        Group group = groupService.findById(groupId);
+
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        scrap.updateGroup(group);
+    }
 }

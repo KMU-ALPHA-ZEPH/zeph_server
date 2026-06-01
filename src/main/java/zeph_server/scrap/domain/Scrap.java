@@ -60,4 +60,8 @@ public class Scrap {
     @CreatedDate
     @Column(name = "saved_at", nullable = false, updatable = false)
     private LocalDateTime savedAt;
+
+    public void updateGroup(Group group) {
+        this.group = group;
+    }
 }
