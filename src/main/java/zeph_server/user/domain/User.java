@@ -41,6 +41,9 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "profile_image_key")
+    private String profileImageKey;
+
     @Column(nullable = false)
     private String email;
 

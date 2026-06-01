@@ -5,9 +5,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.TokenProvider;
+import zeph_server.global.s3.S3ImageService;
 import zeph_server.user.domain.User;
 import zeph_server.user.dto.EmailLoginRequest;
 import zeph_server.user.dto.EmailSignupRequest;
@@ -26,6 +28,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
     private final PasswordResetMailService passwordResetMailService;
+    private final S3ImageService s3ImageService;
 
     @Transactional
     public void signup(EmailSignupRequest request) {
@@ -63,7 +66,7 @@ public class UserService {
                 user.getKakaoId(),
                 user.getName(),
                 user.getEmail(),
-                user.getProfileImageUrl(),
+                profileImageUrl(user),
                 token
         );
     }
@@ -118,7 +121,7 @@ public class UserService {
                 user.getKakaoId(),
                 user.getEmail(),
                 user.getName(),
-                user.getProfileImageUrl(),
+                profileImageUrl(user),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
@@ -130,7 +133,17 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
         user.setName(dto.name());
-        user.setProfileImageUrl((dto.profile_image_url()));
+    }
+
+    @Transactional
+    public void updateProfile(Long id, String name, MultipartFile image) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        user.setName(name);
+        if (image != null && !image.isEmpty()) {
+            user.setProfileImageKey(s3ImageService.uploadProfileImage(id, image));
+        }
     }
 
     @Transactional
@@ -142,5 +155,12 @@ public class UserService {
     public User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("user not found."));
+    }
+
+    private String profileImageUrl(User user) {
+        if (user.getProfileImageKey() != null && !user.getProfileImageKey().isBlank()) {
+            return s3ImageService.toPublicUrl(user.getProfileImageKey());
+        }
+        return user.getProfileImageUrl();
     }
 }
