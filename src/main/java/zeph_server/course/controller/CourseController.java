@@ -6,25 +6,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import zeph_server.course.dto.CourseDetailResponse;
-import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.RecommendCourseRequest;
-import zeph_server.course.dto.RecommendCourseResponse;
+import org.springframework.web.bind.annotation.*;
+import zeph_server.course.dto.*;
 import zeph_server.course.service.CourseService;
 import zeph_server.global.security.CustomUserDetails;
+import zeph_server.group.dto.UpdateGroupRequest;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -86,6 +79,19 @@ public class CourseController {
         Long userId = userDetails.getUser().getId();
         return ResponseEntity.ok(courseService.getCourseById(courseId, userId));
     }
+
+    @Operation(summary = "코스 이름 수정")
+    @PatchMapping("/{courseId}")
+    public ResponseEntity<?> updateCourseById(
+            @PathVariable Long courseId,
+            @RequestBody @Valid UpdateCourseRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        courseService.updateCourse(courseId, requestDTO, userId);
+        return ResponseEntity.ok().build();
+    }
+
 
     @Operation(summary = "코스 GPX 다운로드", description = "코스 경로를 GPX 파일로 내려준다. 클라이언트가 다운로드/공유에 사용한다.")
     @ApiResponses(value = {

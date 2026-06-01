@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record CourseResponse(
         Long id,
+        String name,
         String type,
         Boolean roundTrip,
         String region,
@@ -16,6 +17,7 @@ public record CourseResponse(
     public static CourseResponse create(Course course, Long likeCount, Boolean isLiked) {
         return new CourseResponse(
                 course.getId(),
+                course.getName(),
                 course.getType(),
                 course.getRoundTrip(),
                 course.getRegion(),
