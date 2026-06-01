@@ -119,7 +119,7 @@ public class CourseService {
                         course -> courseLikeService.getLikeCount(course.getId())
                 ));
 
-        // liked 목록은 sort 미지정 시 쿼리의 최신 좋아요순(likedAt desc)을 유지하고,
+        // liked 목록은 sort 미지정 시 쿼리의 최신 좋아요순(likedAt desc)을 유지
         // 그 외 목록은 기존대로 인기순(POPULAR)을 기본 정렬로 적용
         List<Course> sorted = (condition.isLiked() && !condition.hasSort())
                 ? courses
@@ -155,8 +155,8 @@ public class CourseService {
         };
     }
 
-    // 코스 시작점과 사용자 설정 위치 사이의 직선 거리.
-    // 경로 데이터가 없으면 정렬 시 맨 뒤로 보낸다.
+    // 코스 시작점과 사용자 설정 위치 사이의 직선 거리
+    // 경로 데이터가 없으면 정렬 시 맨 뒤로
     private double distanceFromUser(Course course, double lat, double lng) {
         PathData pathData = course.getPathData();
         if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
