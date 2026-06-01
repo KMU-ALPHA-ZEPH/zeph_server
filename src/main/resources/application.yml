@@ -65,6 +65,12 @@ app:
   server-url: ${API_SERVER_URL:https://api.kmuzeph.site}
   password-reset-url: ${PASSWORD_RESET_URL:https://www.kmuzeph.site/reset-password}
 
+aws:
+  region: ${AWS_REGION:ap-northeast-2}
+  s3:
+    bucket: ${AWS_S3_BUCKET:}
+    public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
+
 springdoc:
   swagger-ui:
     path: /swagger

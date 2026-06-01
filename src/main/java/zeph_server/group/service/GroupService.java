@@ -3,9 +3,11 @@ package zeph_server.group.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import zeph_server.global.exception.DuplicateException;
 import zeph_server.global.exception.ForbiddenException;
 import zeph_server.global.exception.NotFoundException;
+import zeph_server.global.s3.S3ImageService;
 import zeph_server.group.domain.Group;
 import zeph_server.group.dto.AddGroupRequest;
 import zeph_server.group.dto.GroupResponse;
@@ -23,6 +25,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final ScrapRepository scrapRepository;
     private final UserRepository userRepository;
+    private final S3ImageService s3ImageService;
 
     @Transactional
     public void addGroup(AddGroupRequest requestDTO, Long userId) {
@@ -54,7 +57,8 @@ public class GroupService {
         return groups.stream()
                 .map(group -> GroupResponse.from(
                         group,
-                        scrapRepository.countByGroupId(group.getId())
+                        scrapRepository.countByGroupId(group.getId()),
+                        s3ImageService.toPublicUrl(group.getImageKey())
                 ))
                 .toList();
     }
@@ -71,6 +75,24 @@ public class GroupService {
         }
 
         group.update(requestDTO.name(), requestDTO.description());
+
+    }
+
+    @Transactional
+    public void updateGroup(Long groupId, String name, String description, MultipartFile image, Long userId) {
+        Group group = groupRepository.findById(groupId).orElseThrow(() -> new IllegalArgumentException("Folder Not Found"));
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+        if (!group.getName().equals(name)
+                && groupRepository.existsByUserIdAndName(userId, name)) {
+            throw new DuplicateException("이미 존재하는 폴더 이름입니다");
+        }
+
+        group.update(name, description);
+        if (image != null && !image.isEmpty()) {
+            group.updateImage(s3ImageService.uploadGroupImage(groupId, image));
+        }
 
     }
 

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,8 +21,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.JwtCookieProvider;
 import zeph_server.user.dto.EmailLoginRequest;
@@ -163,13 +166,24 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
-    @PutMapping("/users/{id}")
+    @PutMapping(value = "/users/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateProfile(
             @Parameter(description = "사용자 ID", required = true)
             @PathVariable("id") Long id,
             @RequestBody UserUpdateDto dto) {
         userService.updateProfile(id, dto);
         return ResponseEntity.noContent().build(); //204
+    }
+
+    @PutMapping(value = "/users/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateProfileWithImage(
+            @Parameter(description = "사용자 ID", required = true)
+            @PathVariable("id") Long id,
+            @RequestPart("name") String name,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        userService.updateProfile(id, name, image);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "사용자 삭제", description = "사용자 ID로 계정을 삭제한다.")
