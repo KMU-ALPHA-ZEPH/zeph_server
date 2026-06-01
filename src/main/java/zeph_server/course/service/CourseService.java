@@ -17,9 +17,7 @@ import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
 
 import zeph_server.global.exception.DuplicateException;
-import zeph_server.global.exception.ForbiddenException;
 import zeph_server.global.exception.NotFoundException;
-import zeph_server.group.domain.Group;
 import zeph_server.user.domain.User;
 import zeph_server.user.service.UserService;
 import zeph_server.util.ReverseGeoCalculator;
