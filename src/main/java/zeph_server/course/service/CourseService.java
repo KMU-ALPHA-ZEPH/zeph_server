@@ -20,6 +20,8 @@ import zeph_server.global.exception.DuplicateException;
 import zeph_server.global.exception.ForbiddenException;
 import zeph_server.global.exception.NotFoundException;
 import zeph_server.group.domain.Group;
+import zeph_server.user.domain.User;
+import zeph_server.user.service.UserService;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ public class CourseService {
     private final AiCourseClient aiCourseClient;
     private final ObjectMapper objectMapper;
     private final GpxWriter gpxWriter;
+    private final UserService userService;
 
     private List<RouteNodeResponse> loadMockRouteNodes() {
         try {
@@ -145,7 +148,7 @@ public class CourseService {
 
 
     @Transactional
-    public Course createCourse(CreateCourseRequest requestDTO) {
+    public Course createCourse(CreateCourseRequest requestDTO, Long userId) {
         PathData pathData = requestDTO.pathData();
         Point first = pathData.points().get(0);
 
@@ -154,8 +157,10 @@ public class CourseService {
 
         String region = reverseGeoCalculator.getRegion(startLat, startLng);
 
+        User user = userService.findById(userId);
 
         Course course = Course.builder()
+                .user(user)
                 .type(requestDTO.type())
                 .name(requestDTO.name())
                 .description(requestDTO.description())
