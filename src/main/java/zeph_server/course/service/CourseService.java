@@ -2,25 +2,24 @@ package zeph_server.course.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.client.AiCourseClient;
 import zeph_server.course.domain.Course;
-import zeph_server.course.dto.CourseDetailResponse;
-import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.CreateCourseRequest;
-import zeph_server.course.dto.RecommendCourseRequest;
-import zeph_server.course.dto.RecommendCourseResponse;
-import zeph_server.course.dto.RouteNodeResponse;
+import zeph_server.course.dto.*;
 import zeph_server.course.dto.common.PathData;
 import zeph_server.course.dto.common.Point;
 import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
 
+import zeph_server.global.exception.DuplicateException;
 import zeph_server.global.exception.NotFoundException;
+import zeph_server.user.domain.User;
+import zeph_server.user.service.UserService;
 import zeph_server.util.ReverseGeoCalculator;
 
 import java.io.IOException;
@@ -39,6 +38,7 @@ public class CourseService {
     private final AiCourseClient aiCourseClient;
     private final ObjectMapper objectMapper;
     private final GpxWriter gpxWriter;
+    private final UserService userService;
 
     private List<RouteNodeResponse> loadMockRouteNodes() {
         try {
@@ -92,10 +92,21 @@ public class CourseService {
     }
 
     public RecommendCourseResponse recommendCourse(RecommendCourseRequest requestDTO) {
-        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
-//        List<RouteNodeResponse> routeNodes =
-//                aiCourseClient.requestRecommendCourse(requestDTO);
+//        List<RouteNodeResponse> routeNodes = loadMockRouteNodes();
+        AiRecommendResponse aiResponse =
+                aiCourseClient.requestRecommendCourse(requestDTO);
 
+        RecommendedRouteResponse route =
+                aiResponse.routes().get(0);
+
+        List<RouteNodeResponse> routeNodes =
+                route.points();
+
+        if (routeNodes == null || routeNodes.isEmpty()) {
+
+            throw new IllegalStateException("AI가 추천 경로를 반환하지 않았습니다.");
+
+        }
         List<Point> points = routeNodes.stream()
                 .map(node -> new Point(
                         node.id(),
@@ -128,13 +139,14 @@ public class CourseService {
                 requestDTO.roundTrip(),
                 requestDTO.startLat(),
                 requestDTO.startLng(),
-                pathData
+                pathData,
+                aiResponse.preferenceSummary()
         );
     }
 
 
     @Transactional
-    public Course createCourse(CreateCourseRequest requestDTO) {
+    public Course createCourse(CreateCourseRequest requestDTO, Long userId) {
         PathData pathData = requestDTO.pathData();
         Point first = pathData.points().get(0);
 
@@ -143,10 +155,13 @@ public class CourseService {
 
         String region = reverseGeoCalculator.getRegion(startLat, startLng);
 
+        User user = userService.findById(userId);
 
         Course course = Course.builder()
-                .type(requestDTO.type())
+                .user(user)
                 .name(requestDTO.name())
+                .type(requestDTO.type())
+                .description(requestDTO.description())
                 .distanceKm(requestDTO.distanceKm())
                 .roundTrip(requestDTO.roundTrip())
                 .pathData(requestDTO.pathData())
@@ -174,5 +189,24 @@ public class CourseService {
         }
 
         return gpxWriter.writeRoute(course.getName(), pathData.points());
+    }
+
+    @Transactional
+    public void updateCourse(Long courseId, @Valid UpdateCourseRequest requestDTO, Long userId) {
+        String newName = requestDTO.name().trim();
+        Course course = courseRepository
+                .findByIdAndUserId(courseId, userId)
+                .orElseThrow(() -> new NotFoundException("Course Not Found"));
+
+        if (!course.getName().equals(newName)
+                && courseRepository.existsByUserIdAndName(userId, requestDTO.name())) {
+            throw new DuplicateException("이미 존재하는 코스 이름입니다");
+        }
+
+        course.update(
+                requestDTO.name(),
+                requestDTO.description()
+        );
+
     }
 }

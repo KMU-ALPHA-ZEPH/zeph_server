@@ -38,6 +38,7 @@ public class Group {
     @Column(nullable = false)
     private String name;
 
+    @Column
     private String description;
 
     @Column(name = "image_key")

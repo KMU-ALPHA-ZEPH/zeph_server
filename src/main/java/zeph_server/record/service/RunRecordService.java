@@ -1,6 +1,8 @@
 package zeph_server.record.service;
 
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zeph_server.course.domain.Course;
@@ -145,7 +147,7 @@ public class RunRecordService {
 
         if (period != Period.ALL) {
             if (date == null) {
-                throw new CustomException(GlobalErrorCode.INVALID_REQUEST);
+                date = LocalDate.now();
             }
             switch (period) {
                 case WEEK -> {
@@ -168,9 +170,12 @@ public class RunRecordService {
 
         String typeFilter = (type == null || "ALL".equalsIgnoreCase(type)) ? null : type;
 
-        List<RunRecord> records = runRecordRepository.findStatsRecords(userId, typeFilter, start, end);
+        List<RunRecord> records = runRecordRepository.findAll(statsSpec(userId, typeFilter, start, end));
 
         int runCount = records.size();
+        long totalDurationSec = records.stream()
+                .mapToLong(RunRecord::getDurationSec)
+                .sum();
         long totalMovingSec = records.stream()
                 .mapToLong(r -> r.getDurationSec() - r.getPausedSec())
                 .sum();
@@ -188,14 +193,33 @@ public class RunRecordService {
         return RunStatsResponseDTO.builder()
                 .runCount(runCount)
                 .avgPace(avgPace)
-                .totalDurationSec((int) totalMovingSec)
+                .totalDurationSec((int) totalDurationSec)
                 .totalDistanceKm(totalDistanceKm)
                 .breakdown(breakdown)
                 .build();
     }
 
-
-
+    private Specification<RunRecord> statsSpec(
+            Long userId,
+            String type,
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("userId"), userId));
+            if (type != null) {
+                predicates.add(cb.equal(root.get("course").get("type"), type));
+            }
+            if (start != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startTime"), start));
+            }
+            if (end != null) {
+                predicates.add(cb.lessThan(root.get("startTime"), end));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
     private Course findCourse(Long courseId) {
         return courseRepository.findById(courseId).orElseThrow(() ->
@@ -213,7 +237,7 @@ public class RunRecordService {
     }
 
     private RunRecord createRunRecord(Long userId, RunRecordRequestDTO dto, Course course) {
-        RunRecord runRecod =
+        RunRecord runRecord =
                 RunRecord.builder()
                         .userId(userId)
                         .course(course)
@@ -221,10 +245,10 @@ public class RunRecordService {
                         .endTime(dto.getEndTime())
                         .distanceKm(dto.getDistanceKm())
                         .durationSec(dto.getDurationSec())
-                        .pausedSec(dto.getPausedSec() == null ? 0 : dto.getPausedSec())
+                        .pausedSec(dto.getPausedSec())
                         .build();
 
-        return runRecordRepository.save(runRecod);
+        return runRecordRepository.save(runRecord);
     }
 
     private void verifyOwnership(RunRecord record, Long userId) {
@@ -302,19 +326,15 @@ public class RunRecordService {
     }
 
     private <T> List<T> downsample(List<T> points, int targetSize) {
-        if (points == null || points.size() <= targetSize) {
+        if (points == null || targetSize <= 1 || points.size() <= targetSize) {
             return points;
         }
 
-        int step = points.size() / targetSize;
-        List<T> result = new ArrayList<>();
-        for (int i = 0; i < points.size(); i += step) {
-            result.add(points.get(i));
-        }
-
-        T lastSource = points.get(points.size() - 1);
-        if (result.get(result.size() - 1) != lastSource) {
-            result.add(lastSource);
+        int n = points.size();
+        List<T> result = new ArrayList<>(targetSize);
+        for (int i = 0; i < targetSize; i++) {
+            int idx = (int) Math.round((double) i * (n - 1) / (targetSize - 1));
+            result.add(points.get(idx));
         }
         return result;
     }

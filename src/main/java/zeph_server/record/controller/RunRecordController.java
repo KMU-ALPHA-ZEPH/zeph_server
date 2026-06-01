@@ -43,7 +43,7 @@ public class RunRecordController {
     @Operation(summary = "러닝 기록 등록", description = "러닝 기록을 저장")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "생성 성공"),
-            @ApiResponse(responseCode = "400", description = "필수 필드 누락 / 좌표 범위 초과"),
+            @ApiResponse(responseCode = "400", description = "필수 필드 누락 / 좌표 범위 초과 / 거리·시간 값 오류(0 이하, pausedSec>durationSec, endTime≤startTime)"),
             @ApiResponse(responseCode = "401", description = "토큰 누락 또는 만료"),
             @ApiResponse(responseCode = "404", description = "courseId에 해당하는 코스 없음")
     })

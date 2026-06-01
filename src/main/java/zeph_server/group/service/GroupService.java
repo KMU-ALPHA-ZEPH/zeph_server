@@ -41,7 +41,8 @@ public class GroupService {
         // Group 생성
         Group group = Group.builder()
                 .name(requestDTO.name())
-                .user(user)         // ← 추가
+                .description(requestDTO.description())
+                .user(user)
                 .build();
 
         groupRepository.save(group);

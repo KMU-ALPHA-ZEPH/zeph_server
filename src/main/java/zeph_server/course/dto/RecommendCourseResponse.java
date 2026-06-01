@@ -9,6 +9,7 @@ public record RecommendCourseResponse(
         Boolean roundTrip,
         Double startLat,
         Double startLng,
-        PathData pathData
+        PathData pathData,
+        PreferenceSummaryResponse preferenceSummary
 ) {
 }

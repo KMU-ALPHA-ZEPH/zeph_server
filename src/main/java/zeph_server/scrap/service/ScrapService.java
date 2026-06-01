@@ -35,7 +35,7 @@ public class ScrapService {
         // 1. Course 확보 (신규 생성 or 기존 조회)
         Course course;
         if (dto.courseData() != null) {
-            course = courseService.createCourse(dto.courseData());
+            course = courseService.createCourse(dto.courseData(), userId);
         } else if (dto.courseId() != null) {
             course = courseService.findById(dto.courseId());
         } else {
@@ -84,5 +84,28 @@ public class ScrapService {
         return scraps.stream()
                 .map(ScrapPreviewResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public void updateScrapGroup(Long scrapId, Long groupId, Long userId) {
+        Scrap scrap = scrapRepository.findById(scrapId)
+                .orElseThrow(() -> new NotFoundException("Scrap Not Found"));
+
+        if (!scrap.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        if (groupId == null) {
+            scrap.updateGroup(null);
+            return;
+        }
+
+        Group group = groupService.findById(groupId);
+
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        scrap.updateGroup(group);
     }
 }
