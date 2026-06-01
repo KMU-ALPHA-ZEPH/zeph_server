@@ -191,6 +191,7 @@ public class CourseService {
         return gpxWriter.writeRoute(course.getName(), pathData.points());
     }
 
+    @Transactional
     public void updateCourse(Long courseId, @Valid UpdateCourseRequest requestDTO, Long userId) {
         String newName = requestDTO.name().trim();
         Course course = courseRepository
