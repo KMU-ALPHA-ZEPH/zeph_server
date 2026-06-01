@@ -50,14 +50,8 @@ public class CourseController {
 
     // 인기 경로에서 사용 (인기 경로 목록 조회)
     @Operation(summary = "코스 목록 조회",
-            description = "모든 코스 목록 조회. "
-                    + "lat·lng = 기준 위치(가까운순 정렬·반경 필터 공통 기준점). "
-                    + "radiusKm = 기준 위치로부터 반경(km) 이내 코스만 필터 (lat·lng 필수). "
-                    + "minDistanceKm·maxDistanceKm = 코스 경로 길이(km) 범위 필터. "
-                    + "type = 코스 타입 필터. "
-                    + "sort: DISTANCE_ASC(낮은 거리순) / DISTANCE_DESC(높은 거리순) / "
-                    + "NEAREST(가까운순, lat·lng 필수) / POPULAR(인기순, 기본값). "
-                    + "liked=true 시 로그인 유저가 좋아요한 코스만 조회")
+            description = "필터(지역·타입·반경·경로 길이·좋아요)와 정렬을 조합해 코스 목록을 조회한다. "
+                    + "각 파라미터 설명은 하단 참고.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "목록 조회 성공 - 데이터 없어도 빈 리스트 보냄"),
             @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달 / NEAREST·radiusKm인데 위치 누락"),
