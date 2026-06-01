@@ -90,7 +90,7 @@ public class GroupController {
     @PatchMapping(value = "/{groupId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateGroupWithImage(
             @PathVariable Long groupId,
-            @RequestPart("name") String name,
+            @RequestPart(value = "name", required = false) String name,
             @RequestPart(value = "description", required = false) String description,
             @RequestPart(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal CustomUserDetails userDetails
