@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,25 +50,26 @@ public class CourseController {
 
     // 인기 경로에서 사용 (인기 경로 목록 조회)
     @Operation(summary = "코스 목록 조회",
-            description = "모든 코스 목록 조회 (지역 / 타입)으로 구분. "
+            description = "모든 코스 목록 조회. "
+                    + "lat·lng = 기준 위치(가까운순 정렬·반경 필터 공통 기준점). "
+                    + "radiusKm = 기준 위치로부터 반경(km) 이내 코스만 필터 (lat·lng 필수). "
+                    + "minDistanceKm·maxDistanceKm = 코스 경로 길이(km) 범위 필터. "
+                    + "type = 코스 타입 필터. "
                     + "sort: DISTANCE_ASC(낮은 거리순) / DISTANCE_DESC(높은 거리순) / "
-                    + "NEAREST(가까운순, lat·lng 필수) / POPULAR(인기순, 기본값)")
+                    + "NEAREST(가까운순, lat·lng 필수) / POPULAR(인기순, 기본값). "
+                    + "liked=true 시 로그인 유저가 좋아요한 코스만 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "목록 조회 성공 - 데이터 없어도 빈 리스트 보냄"),
-            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달 / NEAREST인데 위치 누락"),
+            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달 / NEAREST·radiusKm인데 위치 누락"),
             @ApiResponse(responseCode = "500", description = "DB 조회 과정에서 인덱스 or 연결 오류")
     })
     @GetMapping
     public ResponseEntity<List<CourseResponse>> getAllCourses(
-            @RequestParam(required = false) String region,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng,
+            @ParameterObject @ModelAttribute CourseSearchCondition condition,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ResponseEntity.ok(courseService.getAllCourses(region, type, sort, lat, lng, userId));
+        return ResponseEntity.ok(courseService.getAllCourses(condition, userId));
     }
 
     @Operation(summary = "세부 코스 조회", description = "코스 정보 표시")

@@ -61,14 +61,25 @@ public class CourseService {
         }
     }
 
-    public List<CourseResponse> getAllCourses(String region, String type, String sort,
-                                              Double lat, Double lng, Long userId) {
+    public List<CourseResponse> getAllCourses(CourseSearchCondition condition, Long userId) {
+        condition.validate();
+
         List<Course> courses;
+        boolean hasRegion = condition.hasRegion();
+        boolean hasType = condition.hasType();
+        String region = condition.region();
+        String type = condition.type();
 
-        boolean hasRegion = region != null && !region.isBlank();
-        boolean hasType = type != null && !type.isBlank();
-
-        if (hasType && hasRegion) {
+        if (condition.isLiked()) {
+            // 좋아요한 코스만 대상으로 하고, region/type 필터는 인메모리로 적용
+            courses = courseLikeService.getLikedCourses(userId);
+            if (hasRegion) {
+                courses = courses.stream().filter(c -> region.equals(c.getRegion())).toList();
+            }
+            if (hasType) {
+                courses = courses.stream().filter(c -> type.equals(c.getType())).toList();
+            }
+        } else if (hasType && hasRegion) {
             courses = courseRepository.findByRegionAndType(region, type);
         } else if (hasType) {
             courses = courseRepository.findByType(type);
@@ -78,7 +89,29 @@ public class CourseService {
             courses = courseRepository.findAll();
         }
 
-        CourseSortType sortType = CourseSortType.from(sort);
+        // 반경 필터: 기준 위치(lat/lng)로부터 radiusKm 이내인 코스만 남김 (시작점 기준 직선거리)
+        Double radiusKm = condition.radiusKm();
+        Double lat = condition.lat();
+        Double lng = condition.lng();
+        if (radiusKm != null) {
+            courses = courses.stream()
+                    .filter(c -> distanceFromUser(c, lat, lng) <= radiusKm)
+                    .toList();
+        }
+
+        // 코스 경로 길이(distanceKm) 범위 필터
+        Double minDistanceKm = condition.minDistanceKm();
+        Double maxDistanceKm = condition.maxDistanceKm();
+        if (minDistanceKm != null) {
+            courses = courses.stream()
+                    .filter(c -> c.getDistanceKm() >= minDistanceKm)
+                    .toList();
+        }
+        if (maxDistanceKm != null) {
+            courses = courses.stream()
+                    .filter(c -> c.getDistanceKm() <= maxDistanceKm)
+                    .toList();
+        }
 
         Map<Long, Long> likeCountMap = courses.stream()
                 .collect(Collectors.toMap(
@@ -86,9 +119,13 @@ public class CourseService {
                         course -> courseLikeService.getLikeCount(course.getId())
                 ));
 
-        List<Course> sorted = courses.stream()
-                .sorted(buildComparator(sortType, likeCountMap, lat, lng))
-                .toList();
+        // liked 목록은 sort 미지정 시 쿼리의 최신 좋아요순(likedAt desc)을 유지
+        // 그 외 목록은 기존대로 인기순(POPULAR)을 기본 정렬로 적용
+        List<Course> sorted = (condition.isLiked() && !condition.hasSort())
+                ? courses
+                : courses.stream()
+                        .sorted(buildComparator(CourseSortType.from(condition.sort()), likeCountMap, lat, lng))
+                        .toList();
 
         return sorted.stream()
                 .map(course -> CourseResponse.create(
@@ -118,8 +155,8 @@ public class CourseService {
         };
     }
 
-    // 코스 시작점과 사용자 설정 위치 사이의 직선 거리.
-    // 경로 데이터가 없으면 정렬 시 맨 뒤로 보낸다.
+    // 코스 시작점과 사용자 설정 위치 사이의 직선 거리
+    // 경로 데이터가 없으면 정렬 시 맨 뒤로
     private double distanceFromUser(Course course, double lat, double lng) {
         PathData pathData = course.getPathData();
         if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {

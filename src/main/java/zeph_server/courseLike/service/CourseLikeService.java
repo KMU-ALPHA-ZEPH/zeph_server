@@ -13,6 +13,8 @@ import zeph_server.user.domain.User;
 import zeph_server.user.repository.UserRepository;
 import zeph_server.user.service.UserService;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CourseLikeService {
@@ -62,5 +64,11 @@ public class CourseLikeService {
     @Transactional(readOnly = true)
     public boolean isLiked(Long courseId, Long userId) {
         return courseLikeRepository.existsByUserIdAndCourseId(userId, courseId);
+    }
+
+    // 유저가 좋아요한 코스 목록 조회
+    @Transactional(readOnly = true)
+    public List<Course> getLikedCourses(Long userId) {
+        return courseLikeRepository.findLikedCoursesByUserId(userId);
     }
 }
