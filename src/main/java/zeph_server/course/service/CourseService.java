@@ -62,7 +62,8 @@ public class CourseService {
     }
 
     public List<CourseResponse> getAllCourses(String region, String type, String sort,
-                                              Double lat, Double lng, boolean liked, Long userId) {
+                                              Double lat, Double lng, Double radiusKm,
+                                              boolean liked, Long userId) {
         List<Course> courses;
 
         boolean hasRegion = region != null && !region.isBlank();
@@ -85,6 +86,16 @@ public class CourseService {
             courses = courseRepository.findByRegion(region);
         } else {
             courses = courseRepository.findAll();
+        }
+
+        // 반경 필터: 기준 위치(lat/lng)로부터 radiusKm 이내인 코스만 남김 (시작점 기준 직선거리)
+        if (radiusKm != null) {
+            if (lat == null || lng == null) {
+                throw new CustomException(GlobalErrorCode.INVALID_REQUEST);
+            }
+            courses = courses.stream()
+                    .filter(c -> distanceFromUser(c, lat, lng) <= radiusKm)
+                    .toList();
         }
 
         Map<Long, Long> likeCountMap = courses.stream()
