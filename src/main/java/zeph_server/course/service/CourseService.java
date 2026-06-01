@@ -202,8 +202,10 @@ public class CourseService {
             throw new DuplicateException("이미 존재하는 코스 이름입니다");
         }
 
-        course.update(requestDTO.name());
-        course.update(requestDTO.description());
+        course.update(
+                requestDTO.name(),
+                requestDTO.description()
+        );
 
     }
 }

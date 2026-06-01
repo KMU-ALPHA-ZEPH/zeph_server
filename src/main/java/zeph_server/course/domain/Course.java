@@ -79,7 +79,8 @@ public class Course {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public void update(@NotBlank(message = "코스 이름은 필수") @Size(max = 20, message = "코스 이름은 20자 이하") String name) {
+    public void update(String name, String description) {
         this.name = name;
+        this.description = description;
     }
 }
