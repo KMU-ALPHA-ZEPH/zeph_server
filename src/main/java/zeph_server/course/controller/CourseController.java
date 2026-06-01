@@ -48,20 +48,26 @@ public class CourseController {
     }
 
     // 인기 경로에서 사용 (인기 경로 목록 조회)
-    @Operation(summary = "코스 목록 조회", description = "모든 코스 목록 조회 (지역 / 타입)으로 구분")
+    @Operation(summary = "코스 목록 조회",
+            description = "모든 코스 목록 조회 (지역 / 타입)으로 구분. "
+                    + "sort: DISTANCE_ASC(낮은 거리순) / DISTANCE_DESC(높은 거리순) / "
+                    + "NEAREST(가까운순, lat·lng 필수) / POPULAR(인기순, 기본값)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "목록 조회 성공 - 데이터 없어도 빈 리스트 보냄"),
-            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달"),
+            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달 / NEAREST인데 위치 누락"),
             @ApiResponse(responseCode = "500", description = "DB 조회 과정에서 인덱스 or 연결 오류")
     })
     @GetMapping
     public ResponseEntity<List<CourseResponse>> getAllCourses(
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lng,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ResponseEntity.ok(courseService.getAllCourses(region, type, userId));
+        return ResponseEntity.ok(courseService.getAllCourses(region, type, sort, lat, lng, userId));
     }
 
     @Operation(summary = "세부 코스 조회", description = "코스 정보 표시")
