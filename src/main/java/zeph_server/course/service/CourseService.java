@@ -62,13 +62,22 @@ public class CourseService {
     }
 
     public List<CourseResponse> getAllCourses(String region, String type, String sort,
-                                              Double lat, Double lng, Long userId) {
+                                              Double lat, Double lng, boolean liked, Long userId) {
         List<Course> courses;
 
         boolean hasRegion = region != null && !region.isBlank();
         boolean hasType = type != null && !type.isBlank();
 
-        if (hasType && hasRegion) {
+        if (liked) {
+            // 좋아요한 코스만 대상으로 하고, region/type 필터는 인메모리로 적용
+            courses = courseLikeService.getLikedCourses(userId);
+            if (hasRegion) {
+                courses = courses.stream().filter(c -> region.equals(c.getRegion())).toList();
+            }
+            if (hasType) {
+                courses = courses.stream().filter(c -> type.equals(c.getType())).toList();
+            }
+        } else if (hasType && hasRegion) {
             courses = courseRepository.findByRegionAndType(region, type);
         } else if (hasType) {
             courses = courseRepository.findByType(type);
@@ -78,17 +87,20 @@ public class CourseService {
             courses = courseRepository.findAll();
         }
 
-        CourseSortType sortType = CourseSortType.from(sort);
-
         Map<Long, Long> likeCountMap = courses.stream()
                 .collect(Collectors.toMap(
                         Course::getId,
                         course -> courseLikeService.getLikeCount(course.getId())
                 ));
 
-        List<Course> sorted = courses.stream()
-                .sorted(buildComparator(sortType, likeCountMap, lat, lng))
-                .toList();
+        // liked 목록은 sort 미지정 시 쿼리의 최신 좋아요순(likedAt desc)을 유지하고,
+        // 그 외 목록은 기존대로 인기순(POPULAR)을 기본 정렬로 적용
+        boolean hasSort = sort != null && !sort.isBlank();
+        List<Course> sorted = (liked && !hasSort)
+                ? courses
+                : courses.stream()
+                        .sorted(buildComparator(CourseSortType.from(sort), likeCountMap, lat, lng))
+                        .toList();
 
         return sorted.stream()
                 .map(course -> CourseResponse.create(
