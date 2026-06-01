@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record GroupResponse(
         Long id,
         String name,
+        String description,
         Long courseCount,
         LocalDateTime createdAt
 
@@ -15,6 +16,7 @@ public record GroupResponse(
         return new GroupResponse(
                 group.getId(),
                 group.getName(),
+                group.getDescription(),
                 courseCount,
                 group.getCreatedAt()
         );
