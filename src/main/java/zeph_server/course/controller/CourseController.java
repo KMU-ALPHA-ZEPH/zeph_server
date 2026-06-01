@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,7 @@ public class CourseController {
             description = "모든 코스 목록 조회. "
                     + "lat·lng = 기준 위치(가까운순 정렬·반경 필터 공통 기준점). "
                     + "radiusKm = 기준 위치로부터 반경(km) 이내 코스만 필터 (lat·lng 필수). "
+                    + "minDistanceKm·maxDistanceKm = 코스 경로 길이(km) 범위 필터. "
                     + "type = 코스 타입 필터. "
                     + "sort: DISTANCE_ASC(낮은 거리순) / DISTANCE_DESC(높은 거리순) / "
                     + "NEAREST(가까운순, lat·lng 필수) / POPULAR(인기순, 기본값). "
@@ -63,18 +65,11 @@ public class CourseController {
     })
     @GetMapping
     public ResponseEntity<List<CourseResponse>> getAllCourses(
-            @RequestParam(required = false) String region,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng,
-            @RequestParam(required = false) Double radiusKm,
-            @RequestParam(required = false, defaultValue = "false") boolean liked,
+            @ParameterObject @ModelAttribute CourseSearchCondition condition,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ResponseEntity.ok(
-                courseService.getAllCourses(region, type, sort, lat, lng, radiusKm, liked, userId));
+        return ResponseEntity.ok(courseService.getAllCourses(condition, userId));
     }
 
     @Operation(summary = "세부 코스 조회", description = "코스 정보 표시")
