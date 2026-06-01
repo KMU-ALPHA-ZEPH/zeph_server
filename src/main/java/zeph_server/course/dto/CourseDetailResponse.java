@@ -7,6 +7,7 @@ import zeph_server.course.dto.common.Point;
 public record CourseDetailResponse(
         Long id,
         String name,
+        String description,
         String type,
         Float distanceKm,
         Double startLat,
@@ -38,6 +39,7 @@ public record CourseDetailResponse(
                 course.getId(),
                 course.getName(),
                 course.getType(),
+                course.getDescription(),
                 course.getDistanceKm(),
                 startLat,
                 startLng,
