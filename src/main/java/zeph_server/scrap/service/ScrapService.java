@@ -35,7 +35,7 @@ public class ScrapService {
         // 1. Course 확보 (신규 생성 or 기존 조회)
         Course course;
         if (dto.courseData() != null) {
-            course = courseService.createCourse(dto.courseData());
+            course = courseService.createCourse(dto.courseData(), userId);
         } else if (dto.courseId() != null) {
             course = courseService.findById(dto.courseId());
         } else {
