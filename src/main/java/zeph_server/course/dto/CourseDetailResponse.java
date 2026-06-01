@@ -38,8 +38,8 @@ public record CourseDetailResponse(
         return new CourseDetailResponse(
                 course.getId(),
                 course.getName(),
-                course.getType(),
                 course.getDescription(),
+                course.getType(),
                 course.getDistanceKm(),
                 startLat,
                 startLng,
