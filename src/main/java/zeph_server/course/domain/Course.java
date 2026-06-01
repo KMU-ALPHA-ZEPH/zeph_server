@@ -46,6 +46,9 @@ public class Course {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String description;
+
     @Column(nullable = false)
     private String type;
 

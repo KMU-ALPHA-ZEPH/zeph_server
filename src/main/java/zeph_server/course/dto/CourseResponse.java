@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record CourseResponse(
         Long id,
         String name,
+        String description,
         String type,
         Boolean roundTrip,
         String region,
@@ -18,6 +19,7 @@ public record CourseResponse(
         return new CourseResponse(
                 course.getId(),
                 course.getName(),
+                course.getDescription(),
                 course.getType(),
                 course.getRoundTrip(),
                 course.getRegion(),
