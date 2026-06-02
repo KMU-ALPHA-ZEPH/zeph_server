@@ -16,6 +16,8 @@ import zeph_server.course.dto.common.Point;
 import zeph_server.course.dto.common.SegmentInfo;
 import zeph_server.course.repository.CourseRepository;
 import zeph_server.courseLike.service.CourseLikeService;
+import zeph_server.scrap.domain.Scrap;
+import zeph_server.scrap.repository.ScrapRepository;
 
 import zeph_server.global.exception.CustomException;
 import zeph_server.global.exception.DuplicateException;
@@ -42,6 +44,7 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final CourseLikeService courseLikeService;
+    private final ScrapRepository scrapRepository;
     private final AiCourseClient aiCourseClient;
     private final ObjectMapper objectMapper;
     private final GpxWriter gpxWriter;
@@ -135,11 +138,17 @@ public class CourseService {
                         .sorted(buildComparator(CourseSortType.from(condition.sort()), likeCountMap, lat, lng))
                         .toList();
 
+        // 현재 유저의 스크랩을 한 번에 조회해 courseId → scrapId 매핑 (N+1 방지)
+        List<Long> courseIds = sorted.stream().map(Course::getId).toList();
+        Map<Long, Long> scrapIdMap = scrapRepository.findAllByUserIdAndCourseIdIn(userId, courseIds).stream()
+                .collect(Collectors.toMap(scrap -> scrap.getCourse().getId(), Scrap::getId));
+
         return sorted.stream()
                 .map(course -> CourseResponse.create(
                                 course,
                                 likeCountMap.get(course.getId()),
-                                courseLikeService.isLiked(course.getId(), userId)
+                                courseLikeService.isLiked(course.getId(), userId),
+                                scrapIdMap.get(course.getId())
                         )
                 )
                 .toList();
@@ -181,10 +190,15 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("해당 코스를 찾을 수 없습니다."));
 
+        Long scrapId = scrapRepository.findByUserIdAndCourseId(userId, id)
+                .map(Scrap::getId)
+                .orElse(null);
+
         return CourseDetailResponse.create(
                 course,
                 courseLikeService.getLikeCount(id),
-                courseLikeService.isLiked(id, userId)
+                courseLikeService.isLiked(id, userId),
+                scrapId
         );
     }
 
