@@ -22,6 +22,7 @@ import zeph_server.record.dto.response.RunStatsResponseDTO.BreakdownDto;
 import zeph_server.record.repository.RunRecordPointRepository;
 import zeph_server.record.repository.RunRecordRepository;
 import zeph_server.courseLike.repository.CourseLikeRepository;
+import zeph_server.scrap.domain.Scrap;
 import zeph_server.scrap.repository.ScrapRepository;
 
 import java.time.LocalDateTime;
@@ -89,7 +90,10 @@ public class RunRecordService {
         verifyOwnership(record, userId);
         Course course = record.getCourse();
 
-        boolean isScrapped = scrapRepository.existsByUserIdAndCourseId(userId, course.getId());
+        Long scrapId = scrapRepository.findByUserIdAndCourseId(userId, course.getId())
+                .map(Scrap::getId)
+                .orElse(null);
+        boolean isScrapped = scrapId != null;
         boolean isLiked = courseLikeRepository.existsByUserIdAndCourseId(userId, course.getId());
 
         List<RunRecordDetailResponseDTO.PointDto> coursePath =
@@ -105,6 +109,7 @@ public class RunRecordService {
 
         return RunRecordDetailResponseDTO.builder()
                 .runId(record.getId())
+                .courseId(course.getId())
                 .courseName(course.getName())
                 .startTime(record.getStartTime())
                 .endTime(record.getEndTime())
@@ -113,6 +118,7 @@ public class RunRecordService {
                 .avgPace(record.getAvgPace())
                 .memo(record.getMemo())
                 .scrapped(isScrapped)
+                .scrapId(scrapId)
                 .liked(isLiked)
                 .coursePath(coursePath)
                 .actualPath(actualPath)

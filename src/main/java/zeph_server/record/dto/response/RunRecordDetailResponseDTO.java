@@ -12,6 +12,7 @@ import java.util.List;
 public class RunRecordDetailResponseDTO {
 
     private Long runId;
+    private Long courseId;
     private String courseName;
 
     private LocalDateTime startTime;
@@ -23,6 +24,7 @@ public class RunRecordDetailResponseDTO {
     private String memo;
 
     Boolean scrapped;
+    Long scrapId;
     Boolean liked;
 
     private List<PointDto> coursePath;
