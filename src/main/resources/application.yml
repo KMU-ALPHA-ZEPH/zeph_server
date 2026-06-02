@@ -10,7 +10,7 @@ spring:
         config:
           AiCourseClient:
             connectTimeout: 5000
-            readTimeout: 120000
+            readTimeout: 600000
 
   datasource:
     url: ${DB_URL}
