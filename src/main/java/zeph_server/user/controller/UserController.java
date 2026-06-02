@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import zeph_server.global.dto.AuthResponseDto;
 import zeph_server.global.jwt.JwtCookieProvider;
+import zeph_server.global.security.CustomUserDetails;
 import zeph_server.user.dto.EmailLoginRequest;
 import zeph_server.user.dto.EmailSignupRequest;
 import zeph_server.user.dto.PasswordResetConfirmRequest;
@@ -157,6 +159,21 @@ public class UserController {
             @Parameter(description = "사용자 ID", required = true)
             @PathVariable("id") Long id) {
         return ResponseEntity.ok(userService.getProfile(id)); //200
+    }
+
+    @Operation(summary = "내 프로필 조회", description = "JWT 인증 정보를 기준으로 현재 로그인한 사용자 프로필을 조회한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "내 프로필 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/users/me")
+    public ResponseEntity<UserDto> getMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        return ResponseEntity.ok(userService.getProfile(userId));
     }
 
     @Operation(summary = "사용자 프로필 수정", description = "사용자 이름과 프로필 이미지를 수정한다.")
