@@ -91,4 +91,20 @@ public class ScrapController {
         return ResponseEntity.ok(scrapService.getScrapsByGroup(userId, groupId));
     }
 
+    @Operation(summary = "스크랩 삭제(해제)", description = "스크랩을 완전히 제거 (스크랩 토글 OFF)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "본인 스크랩이 아닌 경우"),
+            @ApiResponse(responseCode = "404", description = "스크랩을 찾을 수 없음")
+    })
+    @DeleteMapping("/{scrapId}")
+    public ResponseEntity<Void> deleteScrap(
+            @PathVariable Long scrapId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        scrapService.deleteScrap(scrapId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

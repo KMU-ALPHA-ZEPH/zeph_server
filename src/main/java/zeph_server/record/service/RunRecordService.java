@@ -22,7 +22,9 @@ import zeph_server.record.dto.response.RunStatsResponseDTO.BreakdownDto;
 import zeph_server.record.repository.RunRecordPointRepository;
 import zeph_server.record.repository.RunRecordRepository;
 import zeph_server.courseLike.repository.CourseLikeRepository;
+import zeph_server.scrap.domain.Scrap;
 import zeph_server.scrap.repository.ScrapRepository;
+import zeph_server.util.PathSampler;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -89,7 +91,10 @@ public class RunRecordService {
         verifyOwnership(record, userId);
         Course course = record.getCourse();
 
-        boolean isScrapped = scrapRepository.existsByUserIdAndCourseId(userId, course.getId());
+        Long scrapId = scrapRepository.findByUserIdAndCourseId(userId, course.getId())
+                .map(Scrap::getId)
+                .orElse(null);
+        boolean isScrapped = scrapId != null;
         boolean isLiked = courseLikeRepository.existsByUserIdAndCourseId(userId, course.getId());
 
         List<RunRecordDetailResponseDTO.PointDto> coursePath =
@@ -105,6 +110,7 @@ public class RunRecordService {
 
         return RunRecordDetailResponseDTO.builder()
                 .runId(record.getId())
+                .courseId(course.getId())
                 .courseName(course.getName())
                 .startTime(record.getStartTime())
                 .endTime(record.getEndTime())
@@ -113,6 +119,7 @@ public class RunRecordService {
                 .avgPace(record.getAvgPace())
                 .memo(record.getMemo())
                 .scrapped(isScrapped)
+                .scrapId(scrapId)
                 .liked(isLiked)
                 .coursePath(coursePath)
                 .actualPath(actualPath)
@@ -291,7 +298,7 @@ public class RunRecordService {
 
 
         List<RunRecordListResponseDTO.PointDto> actualPath =
-                downsample(rawActual, 50).stream()
+                PathSampler.downsample(rawActual, 50).stream()
                         .map(p -> new RunRecordListResponseDTO.PointDto(p.getLat(), p.getLng()))
                         .collect(Collectors.toList());
 
@@ -311,7 +318,7 @@ public class RunRecordService {
         if (pathData == null || pathData.points() == null || pathData.points().isEmpty()) {
             return List.of();
         }
-        return downsample(pathData.points(), 50).stream()
+        return PathSampler.downsample(pathData.points(), 50).stream()
                 .map(p -> new RunRecordListResponseDTO.PointDto(p.lat(), p.lng()))
                 .collect(Collectors.toList());
     }
@@ -323,20 +330,6 @@ public class RunRecordService {
         return pathData.points().stream()
                 .map(p -> new RunRecordDetailResponseDTO.PointDto(p.lat(), p.lng()))
                 .collect(Collectors.toList());
-    }
-
-    private <T> List<T> downsample(List<T> points, int targetSize) {
-        if (points == null || targetSize <= 1 || points.size() <= targetSize) {
-            return points;
-        }
-
-        int n = points.size();
-        List<T> result = new ArrayList<>(targetSize);
-        for (int i = 0; i < targetSize; i++) {
-            int idx = (int) Math.round((double) i * (n - 1) / (targetSize - 1));
-            result.add(points.get(idx));
-        }
-        return result;
     }
 
     private List<BreakdownDto> computeBreakdown(

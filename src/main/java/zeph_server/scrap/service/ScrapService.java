@@ -133,3 +133,15 @@ public class ScrapService {
         return value != null && value.toLowerCase().contains(keyword);
     }
 }
+    @Transactional
+    public void deleteScrap(Long scrapId, Long userId) {
+        Scrap scrap = scrapRepository.findById(scrapId)
+                .orElseThrow(() -> new NotFoundException("Scrap Not Found"));
+
+        if (!scrap.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        scrapRepository.delete(scrap);
+    }
+}
