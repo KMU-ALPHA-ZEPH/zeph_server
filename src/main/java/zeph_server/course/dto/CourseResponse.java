@@ -14,9 +14,10 @@ public record CourseResponse(
         String region,
         Long likeCount,
         Boolean isLiked,
+        Long scrapId,
         LocalDateTime createdAt
 ) {
-    public static CourseResponse create(Course course, Long likeCount, Boolean isLiked) {
+    public static CourseResponse create(Course course, Long likeCount, Boolean isLiked, Long scrapId) {
         return new CourseResponse(
                 course.getId(),
                 course.getName(),
@@ -27,6 +28,7 @@ public record CourseResponse(
                 course.getRegion(),
                 likeCount,
                 isLiked,
+                scrapId,
                 course.getCreatedAt()
         );
     }

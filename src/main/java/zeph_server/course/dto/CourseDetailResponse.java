@@ -14,12 +14,14 @@ public record CourseDetailResponse(
         Double startLng,
         PathData pathData,
         Long likeCount,
-        Boolean isLiked
+        Boolean isLiked,
+        Long scrapId
 ) {
     public static CourseDetailResponse create(
             Course course,
             Long likeCount,
-            Boolean isLiked
+            Boolean isLiked,
+            Long scrapId
     ) {
 
         Double startLat = null;
@@ -45,7 +47,8 @@ public record CourseDetailResponse(
                 startLng,
                 course.getPathData(),
                 likeCount,
-                isLiked
+                isLiked,
+                scrapId
         );
     }
 }
