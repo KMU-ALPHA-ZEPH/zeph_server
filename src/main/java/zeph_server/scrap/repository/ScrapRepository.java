@@ -15,6 +15,8 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
 
     boolean existsByUserIdAndCourseId(Long userId, Long id);
 
+    List<Scrap> findAllByUserId(Long userId);
+
     List<Scrap> findAllByUserIdAndGroupId(Long userId, Long groupId);
 
     // 코스 상세에서 현재 유저의 스크랩 단건 조회

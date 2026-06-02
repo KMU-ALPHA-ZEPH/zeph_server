@@ -68,6 +68,26 @@ public class ScrapService {
     }
 
     @Transactional(readOnly = true)
+    public List<ScrapPreviewResponse> getAllScraps(Long userId, String keyword) {
+        List<Scrap> scraps = scrapRepository.findAllByUserId(userId);
+
+        if (keyword != null && !keyword.isBlank()) {
+            String normalizedKeyword = keyword.trim().toLowerCase();
+            scraps = scraps.stream()
+                    .filter(scrap -> {
+                        Course course = scrap.getCourse();
+                        return contains(course.getName(), normalizedKeyword)
+                                || contains(course.getRegion(), normalizedKeyword);
+                    })
+                    .toList();
+        }
+
+        return scraps.stream()
+                .map(ScrapPreviewResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ScrapPreviewResponse> getScrapsByGroup(Long userId, Long groupId) {
         // 1. 폴더 존재 확인
         Group group = groupRepository.findById(groupId)
@@ -109,6 +129,10 @@ public class ScrapService {
         scrap.updateGroup(group);
     }
 
+    private boolean contains(String value, String keyword) {
+        return value != null && value.toLowerCase().contains(keyword);
+    }
+}
     @Transactional
     public void deleteScrap(Long scrapId, Long userId) {
         Scrap scrap = scrapRepository.findById(scrapId)

@@ -59,6 +59,21 @@ public class ScrapController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "전체 스크랩 조회", description = "로그인 유저의 전체 스크랩을 조회하고, keyword로 코스 이름/지역을 검색한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공 - 스크랩 없으면 빈 리스트"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping
+    public ResponseEntity<List<ScrapPreviewResponse>> getAllScraps(
+            @RequestParam(required = false) String keyword,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        return ResponseEntity.ok(scrapService.getAllScraps(userId, keyword));
+    }
+
     @Operation(summary = "폴더별 스크랩 조회", description = "특정 폴더 안의 스크랩 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공 - 스크랩 없으면 빈 리스트"),
