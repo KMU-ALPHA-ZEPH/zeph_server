@@ -1,11 +1,13 @@
 package zeph_server.global.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
@@ -85,6 +87,12 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<?> handleResponseStatusException(ResponseStatusException e) {
+        HttpStatusCode statusCode = e.getStatusCode();
+        return ResponseEntity
+                .status(statusCode)
+                .body(Map.of("message", e.getReason() == null ? "" : e.getReason()));
     // 400 - 잘못된 타입의 쿼리 파라미터/경로 변수
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO>
