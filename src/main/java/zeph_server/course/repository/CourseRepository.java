@@ -16,5 +16,8 @@ public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecif
 
     Boolean existsByUserIdAndName(Long userId, String name);
 
+    // 이름 중복 검사 시 수정 대상 코스 자신은 제외
+    boolean existsByUserIdAndNameAndIdNot(Long userId, String name, Long id);
+
     Optional<Course> findByIdAndUserId(Long courseId, Long userId);
 }

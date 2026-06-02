@@ -309,13 +309,13 @@ public class CourseService {
                 .findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new NotFoundException("Course Not Found"));
 
-        if (!course.getName().equals(newName)
-                && courseRepository.existsByUserIdAndName(userId, requestDTO.name())) {
+        // 수정 대상 코스 자신은 제외하고, 다른 코스가 같은 이름을 쓸 때만 중복 처리
+        if (courseRepository.existsByUserIdAndNameAndIdNot(userId, newName, courseId)) {
             throw new DuplicateException("이미 존재하는 코스 이름입니다");
         }
 
         course.update(
-                requestDTO.name(),
+                newName,
                 requestDTO.description()
         );
 
