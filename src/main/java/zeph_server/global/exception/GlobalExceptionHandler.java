@@ -93,6 +93,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(statusCode)
                 .body(Map.of("message", e.getReason() == null ? "" : e.getReason()));
+    }
+
     // 400 - 잘못된 타입의 쿼리 파라미터/경로 변수
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO>
