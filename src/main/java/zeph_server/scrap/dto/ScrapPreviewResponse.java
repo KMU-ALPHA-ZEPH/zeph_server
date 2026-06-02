@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 public record ScrapPreviewResponse(
         Long scrapId,
         Long courseId,
-        String type,
         String name,
+        String description,
+        String type,
         Float distanceKm,
         String region,
         Long groupId,
@@ -24,6 +25,7 @@ public record ScrapPreviewResponse(
                 scrap.getId(),
                 course.getId(),
                 course.getName(),
+                course.getDescription(),
                 course.getType(),
                 course.getDistanceKm(),
                 course.getRegion(),

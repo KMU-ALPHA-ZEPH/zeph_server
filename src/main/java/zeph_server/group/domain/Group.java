@@ -38,7 +38,11 @@ public class Group {
     @Column(nullable = false)
     private String name;
 
+    @Column
     private String description;
+
+    @Column(name = "image_key")
+    private String imageKey;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -48,8 +52,15 @@ public class Group {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public void update(@NotBlank(message = "폴더 이름은 필수") @Size(max = 20, message = "폴더 이름은 20자 이하") String name, String description) {
+    public void update(
+            @NotBlank(message = "폴더 이름은 필수") @Size(max = 20, message = "폴더 이름은 20자 이하") String name,
+            String description
+    ) {
         this.name = name;
         this.description = description;
+    }
+
+    public void updateImage(String imageKey) {
+        this.imageKey = imageKey;
     }
 }

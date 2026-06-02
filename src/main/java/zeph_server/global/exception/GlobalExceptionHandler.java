@@ -3,10 +3,12 @@ package zeph_server.global.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.Map;
@@ -91,6 +93,56 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(statusCode)
                 .body(Map.of("message", e.getReason() == null ? "" : e.getReason()));
+    // 400 - 잘못된 타입의 쿼리 파라미터/경로 변수
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO>
+    handleTypeMismatch(
+            MethodArgumentTypeMismatchException e
+    ){
+
+        Instant now = Instant.now();
+
+        String requiredType = e.getRequiredType() == null
+                ? "올바른 형식"
+                : e.getRequiredType().getSimpleName();
+        String detail = e.getName() + ": '" + e.getValue()
+                + "' 값을 " + requiredType + " 으로 변환할 수 없습니다";
+
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(
+                        ErrorResponseDTO.builder()
+                                .code(errorCode.name())
+                                .message(detail)
+                                .status(errorCode.getHttpStatus().value())
+                                .timestamp(now)
+                                .build()
+                );
+    }
+
+    // 400 - 읽을 수 없는 요청 바디 (깨진 JSON, 필드 타입 불일치 등)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO>
+    handleNotReadable(
+            HttpMessageNotReadableException e
+    ){
+
+        Instant now = Instant.now();
+
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(
+                        ErrorResponseDTO.builder()
+                                .code(errorCode.name())
+                                .message("요청 본문을 읽을 수 없습니다")
+                                .status(errorCode.getHttpStatus().value())
+                                .timestamp(now)
+                                .build()
+                );
     }
 
     @ExceptionHandler(Exception.class)

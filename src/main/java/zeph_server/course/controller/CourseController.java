@@ -6,25 +6,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.ErrorResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import zeph_server.course.dto.CourseDetailResponse;
-import zeph_server.course.dto.CourseResponse;
-import zeph_server.course.dto.RecommendCourseRequest;
-import zeph_server.course.dto.RecommendCourseResponse;
+import org.springframework.web.bind.annotation.*;
+import zeph_server.course.dto.*;
 import zeph_server.course.service.CourseService;
 import zeph_server.global.security.CustomUserDetails;
+import zeph_server.group.dto.UpdateGroupRequest;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -42,7 +36,7 @@ public class CourseController {
             @ApiResponse(responseCode = "400", description = "추천에 필요한 필수 파라미터 누락 / 지원하지 않는 추천 타입"),
             @ApiResponse(responseCode = "500", description = "AI와의 통신 실패 or 알고리즘 내부 오류")
     })
-    @PostMapping("/recommend")
+    @PostMapping("")
     public ResponseEntity<RecommendCourseResponse> recommendCourse(
             @RequestBody RecommendCourseRequest requestDTO
 //            @AuthenticationPrincipal CustomUserDetails userDetails
@@ -55,20 +49,21 @@ public class CourseController {
     }
 
     // 인기 경로에서 사용 (인기 경로 목록 조회)
-    @Operation(summary = "코스 목록 조회", description = "모든 코스 목록 조회 (지역 / 타입)으로 구분")
+    @Operation(summary = "코스 목록 조회",
+            description = "필터(지역·타입·반경·경로 길이·좋아요)와 정렬을 조합해 코스 목록을 조회한다. "
+                    + "각 파라미터 설명은 하단 참고.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "목록 조회 성공 - 데이터 없어도 빈 리스트 보냄"),
-            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달"),
+            @ApiResponse(responseCode = "400", description = "잘못된 형식의 쿼리 파라미터 전달 / NEAREST·radiusKm인데 위치 누락"),
             @ApiResponse(responseCode = "500", description = "DB 조회 과정에서 인덱스 or 연결 오류")
     })
     @GetMapping
     public ResponseEntity<List<CourseResponse>> getAllCourses(
-            @RequestParam(required = false) String region,
-            @RequestParam(required = false) String type,
+            @ParameterObject @ModelAttribute CourseSearchCondition condition,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ResponseEntity.ok(courseService.getAllCourses(region, type, userId));
+        return ResponseEntity.ok(courseService.getAllCourses(condition, userId));
     }
 
     @Operation(summary = "세부 코스 조회", description = "코스 정보 표시")
@@ -86,6 +81,19 @@ public class CourseController {
         Long userId = userDetails.getUser().getId();
         return ResponseEntity.ok(courseService.getCourseById(courseId, userId));
     }
+
+    @Operation(summary = "코스 이름 수정")
+    @PatchMapping("/{courseId}")
+    public ResponseEntity<?> updateCourseById(
+            @PathVariable Long courseId,
+            @RequestBody @Valid UpdateCourseRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        courseService.updateCourse(courseId, requestDTO, userId);
+        return ResponseEntity.ok().build();
+    }
+
 
     @Operation(summary = "코스 GPX 다운로드", description = "코스 경로를 GPX 파일로 내려준다. 클라이언트가 다운로드/공유에 사용한다.")
     @ApiResponses(value = {

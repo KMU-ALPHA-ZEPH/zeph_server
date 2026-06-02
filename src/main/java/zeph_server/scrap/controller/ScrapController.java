@@ -7,15 +7,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import zeph_server.global.security.CustomUserDetails;
 import zeph_server.scrap.dto.CreateScrapRequest;
 import zeph_server.scrap.dto.ScrapPreviewResponse;
+import zeph_server.scrap.dto.UpdateScrapGroupRequest;
 import zeph_server.scrap.service.ScrapService;
 
 import java.util.List;
@@ -40,6 +36,26 @@ public class ScrapController {
     ) {
         Long userId = userDetails.getUser().getId();
         scrapService.createScrap(requestDTO, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "스크랩 폴더 변경",
+            description = "스크랩을 다른 폴더로 이동하거나 groupId를 null로 보내 미분류 상태로 변경한다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "폴더 변경 성공"),
+            @ApiResponse(responseCode = "403", description = "본인 스크랩이 아닌 경우"),
+            @ApiResponse(responseCode = "404", description = "스크랩 또는 폴더를 찾을 수 없음")
+    })
+    @PatchMapping("/{scrapId}")
+    public ResponseEntity<Void> updateScrapGroup(
+            @PathVariable Long scrapId,
+            @RequestBody UpdateScrapGroupRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        scrapService.updateScrapGroup(scrapId, requestDTO.groupId(), userId);
         return ResponseEntity.ok().build();
     }
 

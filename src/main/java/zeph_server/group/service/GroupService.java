@@ -1,11 +1,14 @@
 package zeph_server.group.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import zeph_server.global.exception.DuplicateException;
 import zeph_server.global.exception.ForbiddenException;
 import zeph_server.global.exception.NotFoundException;
+import zeph_server.global.s3.S3ImageService;
 import zeph_server.group.domain.Group;
 import zeph_server.group.dto.AddGroupRequest;
 import zeph_server.group.dto.GroupResponse;
@@ -23,6 +26,10 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final ScrapRepository scrapRepository;
     private final UserRepository userRepository;
+    private final S3ImageService s3ImageService;
+
+    @Value("${aws.s3.default-group-image-key:defaults/group.png}")
+    private String defaultGroupImageKey;
 
     @Transactional
     public void addGroup(AddGroupRequest requestDTO, Long userId) {
@@ -38,7 +45,8 @@ public class GroupService {
         // Group 생성
         Group group = Group.builder()
                 .name(requestDTO.name())
-                .user(user)         // ← 추가
+                .description(requestDTO.description())
+                .user(user)
                 .build();
 
         groupRepository.save(group);
@@ -54,7 +62,8 @@ public class GroupService {
         return groups.stream()
                 .map(group -> GroupResponse.from(
                         group,
-                        scrapRepository.countByGroupId(group.getId())
+                        scrapRepository.countByGroupId(group.getId()),
+                        groupImageUrl(group)
                 ))
                 .toList();
     }
@@ -74,7 +83,35 @@ public class GroupService {
 
     }
 
+    @Transactional
+    public void updateGroup(Long groupId, String name, String description, MultipartFile image, Long userId) {
+        Group group = groupRepository.findById(groupId).orElseThrow(() -> new IllegalArgumentException("Folder Not Found"));
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+        String nextName = name == null || name.isBlank() ? group.getName() : name;
+        String nextDescription = description == null ? group.getDescription() : description;
+
+        if (!group.getName().equals(nextName)
+                && groupRepository.existsByUserIdAndName(userId, nextName)) {
+            throw new DuplicateException("이미 존재하는 폴더 이름입니다");
+        }
+
+        group.update(nextName, nextDescription);
+        if (image != null && !image.isEmpty()) {
+            group.updateImage(s3ImageService.uploadGroupImage(groupId, image));
+        }
+
+    }
+
     public Group findById(Long groupId) {
         return groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("폴더를 찾을 수 없습니다"));
+    }
+
+    private String groupImageUrl(Group group) {
+        if (group.getImageKey() != null && !group.getImageKey().isBlank()) {
+            return s3ImageService.toPublicUrl(group.getImageKey());
+        }
+        return s3ImageService.toPublicUrl(defaultGroupImageKey);
     }
 }
