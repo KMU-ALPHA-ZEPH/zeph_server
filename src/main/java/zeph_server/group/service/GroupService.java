@@ -14,6 +14,7 @@ import zeph_server.group.dto.AddGroupRequest;
 import zeph_server.group.dto.GroupResponse;
 import zeph_server.group.dto.UpdateGroupRequest;
 import zeph_server.group.repository.GroupRepository;
+import zeph_server.scrap.domain.Scrap;
 import zeph_server.scrap.repository.ScrapRepository;
 import zeph_server.user.domain.User;
 import zeph_server.user.repository.UserRepository;
@@ -113,5 +114,18 @@ public class GroupService {
             return s3ImageService.toPublicUrl(group.getImageKey());
         }
         return s3ImageService.toPublicUrl(defaultGroupImageKey);
+    }
+
+    @Transactional
+    public void deleteGroup(Long groupId, Long userId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Folder Not Found"));
+
+        if (!group.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("권한 없음");
+        }
+
+        scrapRepository.clearGroupByGroupId(groupId);
+        groupRepository.delete(group);
     }
 }
