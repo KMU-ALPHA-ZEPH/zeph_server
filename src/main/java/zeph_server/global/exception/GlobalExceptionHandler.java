@@ -1,10 +1,12 @@
 package zeph_server.global.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Map;
@@ -81,6 +83,14 @@ public class GlobalExceptionHandler {
                                 .timestamp(now)
                                 .build()
                 );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<?> handleResponseStatusException(ResponseStatusException e) {
+        HttpStatusCode statusCode = e.getStatusCode();
+        return ResponseEntity
+                .status(statusCode)
+                .body(Map.of("message", e.getReason() == null ? "" : e.getReason()));
     }
 
     @ExceptionHandler(Exception.class)
