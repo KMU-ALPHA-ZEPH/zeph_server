@@ -119,6 +119,14 @@ public class CourseService {
                         course -> courseLikeService.getLikeCount(course.getId())
                 ));
 
+        // 인기 경로 탭: 전역 좋아요 1개 이상 받은 코스만 대상
+        // (liked 폴더는 내가 좋아요한 코스라 이미 ≥1이므로 제외)
+        if (!condition.isLiked()) {
+            courses = courses.stream()
+                    .filter(c -> likeCountMap.getOrDefault(c.getId(), 0L) >= 1)
+                    .toList();
+        }
+
         // liked 목록은 sort 미지정 시 쿼리의 최신 좋아요순(likedAt desc)을 유지
         // 그 외 목록은 기존대로 인기순(POPULAR)을 기본 정렬로 적용
         List<Course> sorted = (condition.isLiked() && !condition.hasSort())
