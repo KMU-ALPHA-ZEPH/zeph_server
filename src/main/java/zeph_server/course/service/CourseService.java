@@ -115,6 +115,13 @@ public class CourseService {
                     .filter(c -> c.getDistanceKm() <= maxDistanceKm)
                     .toList();
         }
+        if (condition.hasKeyword()) {
+            String keyword = condition.keyword().trim().toLowerCase();
+            courses = courses.stream()
+                    .filter(course -> contains(course.getName(), keyword)
+                            || contains(course.getRegion(), keyword))
+                    .toList();
+        }
 
         Map<Long, Long> likeCountMap = courses.stream()
                 .collect(Collectors.toMap(
@@ -184,6 +191,10 @@ public class CourseService {
             return Double.MAX_VALUE;
         }
         return GeoUtils.haversineKm(lat, lng, start.lat(), start.lng());
+    }
+
+    private boolean contains(String value, String keyword) {
+        return value != null && value.toLowerCase().contains(keyword);
     }
 
     public CourseDetailResponse getCourseById(Long id, Long userId) {

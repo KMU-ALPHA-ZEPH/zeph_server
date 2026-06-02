@@ -34,7 +34,10 @@ public record CourseSearchCondition(
         Double maxDistanceKm,
 
         @Schema(description = "true 시 로그인 유저가 좋아요한 코스만 조회")
-        Boolean liked
+        Boolean liked,
+
+        @Schema(description = "코스 이름 또는 지역/주소 검색어")
+        String keyword
 ) {
     public boolean isLiked() {
         return Boolean.TRUE.equals(liked);
@@ -50,6 +53,10 @@ public record CourseSearchCondition(
 
     public boolean hasSort() {
         return sort != null && !sort.isBlank();
+    }
+
+    public boolean hasKeyword() {
+        return keyword != null && !keyword.isBlank();
     }
 
     // 모순되거나 위치가 누락된 조건이면 400
