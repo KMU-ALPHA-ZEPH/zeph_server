@@ -132,7 +132,7 @@ public class ScrapService {
     private boolean contains(String value, String keyword) {
         return value != null && value.toLowerCase().contains(keyword);
     }
-}
+
     @Transactional
     public void deleteScrap(Long scrapId, Long userId) {
         Scrap scrap = scrapRepository.findById(scrapId)
