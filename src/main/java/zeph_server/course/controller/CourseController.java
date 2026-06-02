@@ -48,6 +48,24 @@ public class CourseController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "코스 저장",
+            description = "추천받은 코스를 영구 저장하고 courseId를 반환"
+                    + "좋아요/스크랩은 이 id로 호출(스크랩 없이 코스만 저장)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공 - courseId 반환"),
+            @ApiResponse(responseCode = "400", description = "필수 필드 누락 / 경로 데이터 없음"),
+            @ApiResponse(responseCode = "500", description = "저장 중 서버 오류")
+    })
+    @PostMapping("/save")
+    public ResponseEntity<CourseSaveResponse> saveCourse(
+            @RequestBody @Valid CreateCourseRequest requestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        Long courseId = courseService.createCourse(requestDTO, userId).getId();
+        return ResponseEntity.ok(new CourseSaveResponse(courseId));
+    }
+
     // 인기 경로에서 사용 (인기 경로 목록 조회)
     @Operation(summary = "코스 목록 조회",
             description = "필터(지역·타입·반경·경로 길이·좋아요)와 정렬을 조합해 코스 목록을 조회한다. "
