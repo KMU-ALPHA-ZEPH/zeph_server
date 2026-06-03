@@ -4,9 +4,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -17,11 +19,25 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(
+                        ErrorResponseDTO.create(
+                                GlobalErrorCode.FILE_SIZE_EXCEEDED,
+                                Instant.now()
+                        )
+                );
+    }
+
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponseDTO>
     handleCustomException(
             CustomException e
-    ){
+    ) {
 
         Instant now = Instant.now();
 
@@ -65,7 +81,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO>
     handleValidationException(
             MethodArgumentNotValidException e
-    ){
+    ) {
 
         Instant now = Instant.now();
 
@@ -100,7 +116,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO>
     handleTypeMismatch(
             MethodArgumentTypeMismatchException e
-    ){
+    ) {
 
         Instant now = Instant.now();
 
@@ -129,7 +145,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO>
     handleNotReadable(
             HttpMessageNotReadableException e
-    ){
+    ) {
 
         Instant now = Instant.now();
 
@@ -151,7 +167,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO>
     handleException(
             Exception e
-    ){
+    ) {
 
         Instant now = Instant.now();
 
