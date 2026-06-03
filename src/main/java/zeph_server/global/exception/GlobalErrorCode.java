@@ -28,6 +28,11 @@ public enum GlobalErrorCode implements ErrorCode {
             "접근 권한이 없습니다"
     ),
 
+    FILE_SIZE_EXCEEDED(
+            HttpStatus.BAD_REQUEST,
+            "이미지 용량은 10MB 이하만 업로드할 수 있습니다."
+    ),
+
     DEFAULT(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "서버 오류가 발생했습니다"
